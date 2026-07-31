@@ -458,6 +458,21 @@ a {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Homepage hero: centered text block */
+body.is-home .hero-banner-content {
+    margin: 0 auto;
+    text-align: center;
+}
+
+body.is-home .hero-banner p.lead {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body.is-home .hero-cta-row {
+    justify-content: center;
+}
+
 .hero-banner h1 {
     font-size: clamp(30px, 5.4vw, 48px);
     font-weight: 800;
