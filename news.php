@@ -99,7 +99,7 @@ require __DIR__ . '/includes/header.php';
     <div class="container hero-banner-content">
         <span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">Stories That Matter</span>
         <h1>News That Speaks<br>For Our Community.</h1>
-        <p class="lead">Real people, real moments — the stories shaping the Oromo community at home and across the diaspora, reported with care.</p>
+        <p class="lead">Real people, real moments — the stories shaping the Oroma community at home and across the diaspora, reported with care.</p>
     </div>
 </section>
 

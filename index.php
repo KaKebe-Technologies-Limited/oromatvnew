@@ -51,7 +51,7 @@ require __DIR__ . '/includes/header.php';
         <?php if ($streamStatus === 'live'): ?>
             <span class="badge badge-live"><span class="dot"></span> Live Now</span>
         <?php else: ?>
-            <span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">Oromo News &amp; Live Media</span>
+            <span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">Oroma News &amp; Live Media</span>
         <?php endif; ?>
         <h1>Your Voice.<br>Your Community.<br>Always On.</h1>
         <p class="lead">Live TV, radio, and the stories that matter to the Oroma community — streaming free, anywhere in the world.</p>
