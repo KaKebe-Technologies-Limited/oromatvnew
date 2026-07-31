@@ -2,11 +2,15 @@
 require_once __DIR__ . '/includes/functions.php';
 
 $activeNav = 'news';
-$perPage = 9;
-$page = max(1, (int) ($_GET['page'] ?? 1));
 $q = trim((string) ($_GET['q'] ?? ''));
 $categorySlug = trim((string) ($_GET['category'] ?? ''));
 $tagSlug = trim((string) ($_GET['tag'] ?? ''));
+
+// A specific category ("news type") view is a curated top-6-by-popularity
+// list rather than the full paginated latest-first feed.
+$isCategoryView = $categorySlug !== '' && $q === '' && $tagSlug === '';
+$perPage = $isCategoryView ? 6 : 9;
+$page = $isCategoryView ? 1 : max(1, (int) ($_GET['page'] ?? 1));
 
 $where = ["a.status = 'published'"];
 $params = [];
@@ -30,17 +34,24 @@ if ($tagSlug !== '') {
 
 $whereSql = implode(' AND ', $where);
 
-$countStmt = db()->prepare(
-    "SELECT COUNT(DISTINCT a.id) AS total FROM articles a
-     LEFT JOIN categories c ON c.id = a.category_id
-     $joinTag
-     WHERE $whereSql"
-);
-$countStmt->execute($params);
-$total = (int) $countStmt->fetch()['total'];
-$totalPages = max(1, (int) ceil($total / $perPage));
-$page = min($page, $totalPages);
-$offset = ($page - 1) * $perPage;
+if ($isCategoryView) {
+    $totalPages = 1;
+    $offset = 0;
+} else {
+    $countStmt = db()->prepare(
+        "SELECT COUNT(DISTINCT a.id) AS total FROM articles a
+         LEFT JOIN categories c ON c.id = a.category_id
+         $joinTag
+         WHERE $whereSql"
+    );
+    $countStmt->execute($params);
+    $total = (int) $countStmt->fetch()['total'];
+    $totalPages = max(1, (int) ceil($total / $perPage));
+    $page = min($page, $totalPages);
+    $offset = ($page - 1) * $perPage;
+}
+
+$orderBy = $isCategoryView ? 'a.views DESC, a.created_at DESC' : 'a.created_at DESC';
 
 $sql = "SELECT DISTINCT a.*, c.name AS category_name, c.slug AS category_slug, u.name AS author_name
         FROM articles a
@@ -48,13 +59,22 @@ $sql = "SELECT DISTINCT a.*, c.name AS category_name, c.slug AS category_slug, u
         LEFT JOIN users u ON u.id = a.author_id
         $joinTag
         WHERE $whereSql
-        ORDER BY a.created_at DESC
+        ORDER BY $orderBy
         LIMIT $perPage OFFSET $offset";
 $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $articles = $stmt->fetchAll();
 
 $categories = db()->query('SELECT * FROM categories ORDER BY name ASC')->fetchAll();
+$activeCategoryName = null;
+if ($isCategoryView) {
+    foreach ($categories as $cat) {
+        if ($cat['slug'] === $categorySlug) {
+            $activeCategoryName = $cat['name'];
+            break;
+        }
+    }
+}
 
 $pageTitle = 'News · ' . SITE_NAME;
 $pageDescription = 'Latest news and updates from ' . SITE_NAME . '.';
@@ -74,9 +94,23 @@ function news_url(array $override = []): string
 require __DIR__ . '/includes/header.php';
 ?>
 
+<section class="hero-banner hero-banner-compact">
+    <div class="hero-banner-bg"></div>
+    <div class="container hero-banner-content">
+        <span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">Stories That Matter</span>
+        <h1>News That Speaks<br>For Our Community.</h1>
+        <p class="lead">Real people, real moments — the stories shaping the Oromo community at home and across the diaspora, reported with care.</p>
+    </div>
+</section>
+
 <div class="container section">
     <div class="section-head">
-        <h2>Latest <span>News</span></h2>
+        <?php if ($activeCategoryName): ?>
+            <h2><?= h($activeCategoryName) ?> <span>Highlights</span></h2>
+            <span class="view-all"><i class="fas fa-fire"></i> Top 6 most read</span>
+        <?php else: ?>
+            <h2>Latest <span>News</span></h2>
+        <?php endif; ?>
     </div>
 
     <form class="filter-bar" method="get" action="<?= h(BASE_PATH) ?>/news.php">

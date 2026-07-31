@@ -13,7 +13,7 @@
         <div class="bottom">
             <span>&copy; <?= date('Y') ?> <?= h(SITE_NAME) ?>. All rights reserved.</span>
             <span class="bottom-right">
-                Radio powered by <a href="https://radio.garden" target="_blank" rel="noopener noreferrer">Radio.Garden</a>
+                Powered by Kakebe Technologies
                 <a href="<?= h(BASE_PATH) ?>/admin/login.php" class="admin-login-link"><i class="fas fa-lock"></i> Admin Login</a>
             </span>
         </div>

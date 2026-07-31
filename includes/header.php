@@ -40,9 +40,17 @@ $streamStatus = get_setting('stream_status', 'offline');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css" />
+    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
 </head>
-<body>
+<body class="<?= h($bodyClass ?? '') ?>">
+
+<?php if (($bodyClass ?? '') === 'is-home'): ?>
+<div class="home-motion-bg" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+</div>
+<?php endif; ?>
 
 <header class="site-header">
     <div class="inner">

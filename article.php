@@ -137,6 +137,9 @@ function render_side_feature_card(array $a): void
 
             <div class="article-meta-line">
                 <?= h(time_ago($article['created_at'])) ?> <span class="sep">/</span> <?= h($article['author_name'] ?? 'Oroma TV') ?>
+                <button type="button" class="copy-link-btn js-copy-link" data-url="<?= h($pageCanonical) ?>" title="Copy link to this article">
+                    <i class="fas fa-link"></i> <span class="copy-text">Copy link</span>
+                </button>
             </div>
             <div class="article-meta-line article-views-line">
                 <i class="fas fa-eye"></i> <?= (int) $article['views'] ?> Views
@@ -166,7 +169,7 @@ function render_side_feature_card(array $a): void
                    href="https://t.me/share/url?url=<?= urlencode($pageCanonical) ?>&text=<?= urlencode($article['title']) ?>"><i class="fab fa-telegram-plane"></i></a>
                 <a class="share-btn" title="Share by email"
                    href="mailto:?subject=<?= urlencode($article['title']) ?>&body=<?= urlencode($pageCanonical) ?>"><i class="fas fa-envelope"></i></a>
-                <button class="share-btn" type="button" id="copyLinkBtn" data-url="<?= h($pageCanonical) ?>" title="Copy link"><i class="fas fa-link"></i></button>
+                <button class="share-btn js-copy-link" type="button" data-url="<?= h($pageCanonical) ?>" title="Copy link"><i class="fas fa-link"></i></button>
             </div>
 
             <?php if ($prevArticle || $nextArticle): ?>
@@ -269,11 +272,18 @@ function render_side_feature_card(array $a): void
 </div>
 
 <script>
-document.getElementById('copyLinkBtn')?.addEventListener('click', function () {
-    navigator.clipboard.writeText(this.dataset.url).then(() => {
-        var icon = this.querySelector('i');
-        icon.className = 'fas fa-check';
-        setTimeout(() => { icon.className = 'fas fa-link'; }, 1500);
+document.querySelectorAll('.js-copy-link').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(this.dataset.url).then(() => {
+            var icon = this.querySelector('i');
+            var text = this.querySelector('.copy-text');
+            icon.className = 'fas fa-check';
+            if (text) text.textContent = 'Copied!';
+            setTimeout(() => {
+                icon.className = 'fas fa-link';
+                if (text) text.textContent = 'Copy link';
+            }, 1500);
+        });
     });
 });
 </script>

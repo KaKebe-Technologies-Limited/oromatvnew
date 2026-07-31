@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/functions.php';
 
 $activeNav = 'home';
+$bodyClass = 'is-home';
 $pageTitle = SITE_NAME . ' · Live Stream & News';
 
 $youtubeStreams = db()->query(
