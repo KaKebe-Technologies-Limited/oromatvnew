@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#800000"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg1)"/>
+  <rect width="1200" height="750" fill="url(#glow1)"/>
+  <g opacity="0.15" stroke="#c9a84c" stroke-width="2" fill="none">
+    <circle cx="600" cy="375" r="180"/>
+    <circle cx="600" cy="375" r="240"/>
+    <circle cx="600" cy="375" r="300"/>
+  </g>
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1" fill="none">
+    <line x1="0" y1="620" x2="1200" y2="560"/>
+    <line x1="0" y1="670" x2="1200" y2="610"/>
+    <line x1="0" y1="130" x2="1200" y2="70"/>
+  </g>
+  <circle cx="600" cy="375" r="110" fill="#c9a84c" opacity="0.95"/>
+  <path d="M 565 320 L 660 375 L 565 430 Z" fill="#1a1a2e"/>
+  <text x="600" y="590" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff" opacity="0.9" letter-spacing="4">OROMA TV</text>
+  <text x="600" y="630" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#c9a84c" opacity="0.85" letter-spacing="3">LIVE STREAMING</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 700" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="55%" stop-color="#3a1010"/>
+      <stop offset="100%" stop-color="#800000"/>
+    </linearGradient>
+    <radialGradient id="heroGlow" cx="80%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="heroGlow2" cx="10%" cy="90%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="700" fill="url(#heroBg)"/>
+  <rect width="1600" height="700" fill="url(#heroGlow)"/>
+  <rect width="1600" height="700" fill="url(#heroGlow2)"/>
+
+  <g opacity="0.18" stroke="#c9a84c" stroke-width="2" fill="none">
+    <circle cx="1250" cy="180" r="90"/>
+    <circle cx="1250" cy="180" r="150"/>
+    <circle cx="1250" cy="180" r="210"/>
+    <circle cx="1250" cy="180" r="270"/>
+  </g>
+
+  <g opacity="0.12" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="60" x2="1600" y2="20"/>
+    <line x1="0" y1="120" x2="1600" y2="80"/>
+    <line x1="0" y1="640" x2="1600" y2="600"/>
+    <line x1="0" y1="690" x2="1600" y2="650"/>
+  </g>
+
+  <g opacity="0.5" fill="#c9a84c">
+    <circle cx="120" cy="560" r="3"/>
+    <circle cx="170" cy="540" r="3"/>
+    <circle cx="220" cy="580" r="3"/>
+    <circle cx="90" cy="610" r="3"/>
+    <circle cx="260" cy="620" r="3"/>
+    <circle cx="1400" cy="480" r="3"/>
+    <circle cx="1450" cy="520" r="3"/>
+    <circle cx="1500" cy="460" r="3"/>
+    <circle cx="1360" cy="530" r="3"/>
+  </g>
+</svg>

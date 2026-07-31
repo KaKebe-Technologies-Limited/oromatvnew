@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750">
+  <defs>
+    <linearGradient id="bg4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c9a84c"/>
+      <stop offset="55%" stop-color="#800000"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="750" fill="url(#bg4)"/>
+  <g transform="translate(600 320)">
+    <circle r="90" fill="#ffffff" opacity="0.92"/>
+    <g stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.85">
+      <line x1="0" y1="-150" x2="0" y2="-115"/>
+      <line x1="106" y1="-106" x2="81" y2="-81"/>
+      <line x1="150" y1="0" x2="115" y2="0"/>
+      <line x1="106" y1="106" x2="81" y2="81"/>
+      <line x1="0" y1="150" x2="0" y2="115"/>
+      <line x1="-106" y1="106" x2="-81" y2="81"/>
+      <line x1="-150" y1="0" x2="-115" y2="0"/>
+      <line x1="-106" y1="-106" x2="-81" y2="-81"/>
+    </g>
+  </g>
+  <g fill="#1a1a2e" opacity="0.55">
+    <path d="M 0 620 Q 30 560 60 620 T 120 620 T 180 620 T 240 620 T 300 620 T 360 620 T 420 620 T 480 620 T 540 620 T 600 620 T 660 620 T 720 620 T 780 620 T 840 620 T 900 620 T 960 620 T 1020 620 T 1080 620 T 1140 620 T 1200 620 L 1200 750 L 0 750 Z"/>
+  </g>
+  <text x="600" y="600" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff" letter-spacing="4">IRREECHA</text>
+  <text x="600" y="640" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#e0c375" opacity="0.9" letter-spacing="3">THANKSGIVING FESTIVAL</text>
+</svg>

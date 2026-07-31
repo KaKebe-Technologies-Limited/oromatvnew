@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="watchBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f0f1a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <radialGradient id="watchGlow" cx="50%" cy="0%" r="80%">
+      <stop offset="0%" stop-color="#800000" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#800000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="500" fill="url(#watchBg)"/>
+  <rect width="1600" height="500" fill="url(#watchGlow)"/>
+  <g opacity="0.35" stroke="#c9a84c" stroke-width="2" fill="none">
+    <path d="M 0 420 Q 200 380 400 420 T 800 420 T 1200 420 T 1600 420"/>
+    <path d="M 0 460 Q 200 430 400 460 T 800 460 T 1200 460 T 1600 460"/>
+  </g>
+  <g opacity="0.5" stroke="#ffffff" stroke-width="1.5" fill="none">
+    <circle cx="800" cy="60" r="30"/>
+    <circle cx="800" cy="60" r="55"/>
+    <circle cx="800" cy="60" r="80"/>
+  </g>
+</svg>
