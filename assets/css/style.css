@@ -265,7 +265,7 @@ a   { color:inherit; text-decoration:none; }
 .hero-main {
     position:relative; overflow:hidden;
     border-radius:var(--radius-md);
-    background:var(--navy); display:block; text-decoration:none;
+    background:#1a1a1a; display:block; text-decoration:none;
 }
 .hero-main img {
     width:100%; height:340px; object-fit:cover;
