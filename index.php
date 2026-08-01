@@ -85,11 +85,6 @@ $hero3 = $featured[2] ?? null;
                 : placeholder_image($hero1['id'], 900, 560); ?>
             <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
 
-            <!-- Logo watermark — top left -->
-            <div class="hero-logo-watermark">
-                <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
-            </div>
-
             <!-- Title only — faint gradient bottom -->
             <div class="hero-overlay">
                 <?php if ($hero1['category_name']): ?>
