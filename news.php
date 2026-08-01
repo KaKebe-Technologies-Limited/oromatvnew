@@ -147,9 +147,7 @@ require __DIR__ . '/includes/header.php';
                 <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>"
                    class="news-card reveal reveal-delay-<?= min($i % 4 + 1, 4) ?>">
                     <div class="thumb">
-                        <?php $src = $a['featured_image']
-                            ? BASE_PATH . '/' . $a['featured_image']
-                            : placeholder_image($a['id'], 480, 300); ?>
+                        <?php $src = article_thumb_src($a['featured_image'], $a['id'], 480, 300); ?>
                         <img src="<?= h($src) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
                         <?= render_thumb_logo() ?>
                         <?php if ($a['category_name']): ?>

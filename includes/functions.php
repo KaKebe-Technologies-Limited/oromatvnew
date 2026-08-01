@@ -583,6 +583,20 @@ function placeholder_image(int $seed, int $w = 640, int $h = 400): string
     return "https://picsum.photos/seed/{$seed}/{$w}/{$h}";
 }
 
+/**
+ * URL for an article thumbnail: the real uploaded featured image if it's actually
+ * present on disk, otherwise a placeholder photo. This makes local dev (where the
+ * production /uploads files usually aren't synced) fall back to placeholders
+ * automatically, while live (where the file really exists) always shows the real photo.
+ */
+function article_thumb_src(?string $featuredImage, int $seed, int $w = 640, int $h = 400): string
+{
+    if ($featuredImage && is_file(__DIR__ . '/../' . $featuredImage)) {
+        return BASE_PATH . '/' . $featuredImage;
+    }
+    return placeholder_image($seed, $w, $h);
+}
+
 /** Small Oroma TV circle-logo badge, meant to sit in the corner of an article thumbnail. */
 function render_thumb_logo(): string
 {

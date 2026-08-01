@@ -80,9 +80,7 @@ $hero3 = $featured[2] ?? null;
         <?php /* Main hero card */ ?>
         <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hero1['slug']) ?>"
            class="hero-main reveal">
-            <?php $img1 = $hero1['featured_image']
-                ? BASE_PATH . '/' . $hero1['featured_image']
-                : placeholder_image($hero1['id'], 900, 560); ?>
+            <?php $img1 = article_thumb_src($hero1['featured_image'], $hero1['id'], 900, 560); ?>
             <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
             <?= render_thumb_logo() ?>
 
@@ -100,9 +98,7 @@ $hero3 = $featured[2] ?? null;
             <?php foreach ([$hero2, $hero3] as $hs): if (!$hs) continue; ?>
             <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hs['slug']) ?>"
                class="hero-side-card reveal">
-                <?php $hsImg = $hs['featured_image']
-                    ? BASE_PATH . '/' . $hs['featured_image']
-                    : placeholder_image($hs['id'], 480, 300); ?>
+                <?php $hsImg = article_thumb_src($hs['featured_image'], $hs['id'], 480, 300); ?>
                 <div class="thumb">
                     <img src="<?= h($hsImg) ?>" alt="<?= h($hs['title']) ?>" loading="lazy" />
                     <?= render_thumb_logo() ?>
@@ -159,9 +155,7 @@ $hero3 = $featured[2] ?? null;
             <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>"
                class="news-card reveal reveal-delay-<?= min($i % 4 + 1, 4) ?>">
                 <div class="thumb">
-                    <?php $aImg = $a['featured_image']
-                        ? BASE_PATH . '/' . $a['featured_image']
-                        : placeholder_image($a['id'], 480, 300); ?>
+                    <?php $aImg = article_thumb_src($a['featured_image'], $a['id'], 480, 300); ?>
                     <img src="<?= h($aImg) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
                     <?= render_thumb_logo() ?>
                     <?php if ($a['category_name']): ?>
@@ -201,9 +195,7 @@ $hero3 = $featured[2] ?? null;
         <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($t['slug']) ?>"
            class="trending-card reveal">
             <div class="thumb">
-                <?php $tImg = $t['featured_image']
-                    ? BASE_PATH . '/' . $t['featured_image']
-                    : placeholder_image($t['id'], 360, 220); ?>
+                <?php $tImg = article_thumb_src($t['featured_image'], $t['id'], 360, 220); ?>
                 <img src="<?= h($tImg) ?>" alt="<?= h($t['title']) ?>" loading="lazy" />
                 <?= render_thumb_logo() ?>
                 <span class="trending-rank <?= $i === 0 ? 'top-rank' : '' ?>"><?= $i + 1 ?></span>
