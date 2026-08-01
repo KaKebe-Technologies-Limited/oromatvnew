@@ -40,8 +40,9 @@
                 <nav>
                     <a href="<?= h(BASE_PATH) ?>/index.php">Home</a>
                     <a href="<?= h(BASE_PATH) ?>/news.php">Latest News</a>
-                    <a href="<?= h(BASE_PATH) ?>/index.php#watch">Watch Live TV</a>
-                    <a href="<?= h(BASE_PATH) ?>/index.php#watch">Radio Stream</a>
+                    <a href="<?= h(BASE_PATH) ?>/watch.php">Watch Live TV</a>
+                    <a href="<?= h(BASE_PATH) ?>/previous-shows.php">Previous Shows</a>
+                    <a href="<?= h(BASE_PATH) ?>/watch.php#watch">Radio Stream</a>
                 </nav>
             </div>
 

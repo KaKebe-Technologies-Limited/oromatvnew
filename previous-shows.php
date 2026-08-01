@@ -44,12 +44,31 @@ require __DIR__ . '/includes/header.php';
         <div class="section-head reveal" style="margin-bottom:16px;">
             <h2 style="font-size:18px;"><i class="fas fa-star" style="color:var(--gold)"></i> Featured <span>Episodes</span></h2>
         </div>
-        <div class="shows-grid shows-grid-featured reveal">
-            <?php foreach (array_slice($featured, 0, 4) as $show): ?>
-                <?php include __DIR__ . '/includes/show-card.php'; ?>
+        <div class="shows-grid shows-grid-featured">
+            <?php foreach (array_slice(array_values($featured), 0, 4) as $i => $show): ?>
+            <a href="<?= h(get_youtube_watch_url($show['video_id'])) ?>"
+               target="_blank" rel="noopener noreferrer"
+               class="show-card reveal reveal-delay-<?= min($i + 1, 4) ?>">
+                <div class="show-thumb">
+                    <img src="<?= h($show['thumbnail_url'] ?: get_youtube_thumbnail($show['video_id'])) ?>"
+                         alt="<?= h($show['title']) ?>" loading="lazy"
+                         onerror="this.src='<?= h(BASE_PATH) ?>/assets/img/default-thumb.svg'" />
+                    <div class="show-play-overlay"><span class="play-btn-circle"><i class="fab fa-youtube"></i></span></div>
+                    <span class="show-featured-badge"><i class="fas fa-star"></i> Featured</span>
+                </div>
+                <div class="show-body">
+                    <?php if ($show['guest_name']): ?><span class="show-guest"><i class="fas fa-microphone"></i> <?= h($show['guest_name']) ?></span><?php endif; ?>
+                    <h3><?= h($show['title']) ?></h3>
+                    <div class="show-meta">
+                        <?php if ($show['upload_date']): ?><span><i class="fas fa-calendar"></i> <?= date('M j, Y', strtotime($show['upload_date'])) ?></span><?php endif; ?>
+                        <?php if ($show['views'] > 0): ?><span><i class="fas fa-eye"></i> <?= number_format($show['views']) ?> views</span><?php endif; ?>
+                    </div>
+                    <span class="show-watch-btn"><i class="fab fa-youtube"></i> Watch on YouTube</span>
+                </div>
+            </a>
             <?php endforeach; ?>
         </div>
-        <div class="section-head reveal" style="margin-top:36px;margin-bottom:16px;">
+        <div class="section-head reveal" style="margin-top:40px;margin-bottom:16px;">
             <h2 style="font-size:18px;">All <span>Episodes</span></h2>
         </div>
         <?php endif; ?>

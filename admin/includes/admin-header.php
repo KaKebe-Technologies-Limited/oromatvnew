@@ -42,6 +42,7 @@ function admin_nav_class(string $key, string $active): string
             <?php if ($pendingCommentCount > 0): ?><span class="nav-badge"><?= $pendingCommentCount ?></span><?php endif; ?>
         </a>
         <a href="<?= h(BASE_PATH) ?>/admin/streams.php" class="<?= admin_nav_class('streams', $activeAdminNav) ?>"><i class="fas fa-satellite-dish"></i> Streams</a>
+        <a href="<?= h(BASE_PATH) ?>/admin/previous-shows.php" class="<?= admin_nav_class('shows', $activeAdminNav) ?>"><i class="fab fa-youtube"></i> Previous Shows</a>
         <?php if ($user['role'] === 'admin'): ?>
             <a href="<?= h(BASE_PATH) ?>/admin/users.php" class="<?= admin_nav_class('users', $activeAdminNav) ?>"><i class="fas fa-users"></i> Users</a>
         <?php endif; ?>
