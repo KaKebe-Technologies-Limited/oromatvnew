@@ -83,7 +83,9 @@ if ($is_local) {
     ini_set('display_errors', '1');
     ini_set('display_startup_errors', '1');
 } else {
-    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+    // E_STRICT was removed in PHP 8.0 — use bitwise safely
+    $suppress = E_DEPRECATED | (defined('E_STRICT') ? E_STRICT : 0);
+    error_reporting(E_ALL & ~$suppress);
     ini_set('display_errors', '0');
     ini_set('log_errors', '1');
     ini_set('error_log', __DIR__ . '/logs/php-errors.log');
