@@ -83,13 +83,11 @@ $hero3 = $featured[2] ?? null;
             <?php $img1 = article_thumb_src($hero1['featured_image'], $hero1['id'], 900, 560); ?>
             <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
             <?= render_thumb_logo() ?>
-
-            <!-- Title only — faint gradient bottom -->
             <div class="hero-overlay">
                 <?php if ($hero1['category_name']): ?>
                     <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
                 <?php endif; ?>
-                <h1><?= h($hero1['title']) ?></h1>
+                <h2><?= h($hero1['title']) ?></h2>
             </div>
         </a>
 
