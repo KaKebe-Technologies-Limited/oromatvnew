@@ -1,0 +1,5 @@
+# User-uploaded content — lives only on each environment's own server,
+# never committed. See uploads/.gitkeep for the tracked placeholder that
+# keeps the folder itself present in a fresh checkout.
+/uploads/*
+!/uploads/.gitkeep
