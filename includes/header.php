@@ -35,7 +35,7 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
+    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=2.1.0" />
     <?= $extraHeadHtml ?? '' ?>
 </head>
 <body class="<?= h($bodyClass ?? '') ?>">
