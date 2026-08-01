@@ -188,8 +188,25 @@ a   { color:inherit; text-decoration:none; }
     height:2px; background:var(--maroon); border-radius:2px;
     transform:scaleX(0); transition:transform .2s; transform-origin:left;
 }
-.site-nav > a:hover, .site-nav > a.active { color:var(--maroon); }
-.site-nav > a:hover::after, .site-nav > a.active::after { transform:scaleX(1); }
+.site-nav > a:hover,
+.site-nav > a.active {
+    color: var(--maroon);
+}
+.site-nav > a:hover::after,
+.site-nav > a.active::after {
+    transform: scaleX(1);
+}
+
+/* Active state — strong visual indicator so it's unmistakably selected */
+.site-nav > a.active {
+    color: var(--maroon) !important;
+    font-weight: 700;
+}
+.site-nav > a.active::after {
+    transform: scaleX(1) !important;
+    background: var(--maroon);
+    height: 3px;
+}
 
 /* right controls */
 .header-right { display:flex; align-items:center; gap:12px; flex-shrink:0; order:4; }
@@ -240,6 +257,14 @@ a   { color:inherit; text-decoration:none; }
     }
     .site-nav.open { transform:translateX(0); }
     .site-nav > a { font-size:16px; }
+    /* Mobile active state — left border pill */
+    .site-nav > a.active {
+        color: var(--maroon) !important;
+        font-weight: 700;
+        border-left: 3px solid var(--maroon);
+        padding-left: 10px;
+    }
+    .site-nav > a.active::after { display:none; }
     .nav-toggle { display:block; }
     .nav-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:220; backdrop-filter:blur(2px); }
     .nav-overlay.visible { display:block; }

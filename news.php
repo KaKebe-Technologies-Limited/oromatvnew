@@ -6,6 +6,11 @@ $q            = trim((string)($_GET['q']        ?? ''));
 $categorySlug = trim((string)($_GET['category'] ?? ''));
 $tagSlug      = trim((string)($_GET['tag']      ?? ''));
 
+// When filtering by a category slug, set activeNav so the category nav link highlights
+if ($categorySlug !== '' && $q === '' && $tagSlug === '') {
+    $activeNav = $categorySlug;
+}
+
 $perPage = 12;
 $page    = max(1, (int)($_GET['page'] ?? 1));
 

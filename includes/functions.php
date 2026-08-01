@@ -589,18 +589,24 @@ function placeholder_image(int $seed, int $w = 640, int $h = 400): string
  * production /uploads files usually aren't synced) fall back to placeholders
  * automatically, while live (where the file really exists) always shows the real photo.
  */
+/**
+ * Return the correct src for an article thumbnail.
+ * Uses the stored image if it exists, otherwise falls back to picsum placeholder.
+ */
 function article_thumb_src(?string $featuredImage, int $seed, int $w = 640, int $h = 400): string
 {
-    if ($featuredImage && is_file(__DIR__ . '/../' . $featuredImage)) {
-        return BASE_PATH . '/' . $featuredImage;
+    if ($featuredImage && trim($featuredImage) !== '') {
+        // Normalise path — strip any stale base-path prefix before /uploads/
+        $clean = preg_replace('#^.*/uploads/#', '/uploads/', $featuredImage);
+        return rtrim(BASE_PATH, '/') . '/' . ltrim($clean, '/');
     }
     return placeholder_image($seed, $w, $h);
 }
 
-/** Small Oroma TV circle-logo badge, meant to sit in the corner of an article thumbnail. */
+/** Small Oroma TV logo badge for thumbnail corners — uses the main logo. */
 function render_thumb_logo(): string
 {
-    return '<img src="' . h(BASE_PATH) . '/assets/img/oroma_circle_logo.svg" class="thumb-logo" alt="" loading="lazy" />';
+    return '<img src="' . h(BASE_PATH) . '/img/logo.png" class="thumb-logo" alt="" loading="lazy" />';
 }
 
 /** Get all categories for admin management with article counts. */
