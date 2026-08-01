@@ -20,7 +20,31 @@
     }
     if (toggle) toggle.addEventListener('click', function(){ nav && nav.classList.contains('open') ? closeNav() : openNav(); });
     if (overlay) overlay.addEventListener('click', closeNav);
-    document.addEventListener('keydown', function(e){ if (e.key==='Escape') closeNav(); });
+    document.addEventListener('keydown', function(e){ if (e.key==='Escape') { closeNav(); closeSearch(); } });
+
+    /* ── search overlay ── */
+    var searchToggle  = document.getElementById('searchToggle');
+    var searchOverlay = document.getElementById('searchOverlay');
+    var searchInput   = document.getElementById('searchInput');
+    var searchClose   = document.getElementById('searchClose');
+
+    function openSearch() {
+        if (!searchOverlay) return;
+        closeNav();
+        searchOverlay.classList.add('open');
+        setTimeout(function () { if (searchInput) searchInput.focus(); }, 60);
+    }
+    function closeSearch() {
+        if (!searchOverlay) return;
+        searchOverlay.classList.remove('open');
+    }
+    if (searchToggle) searchToggle.addEventListener('click', openSearch);
+    if (searchClose) searchClose.addEventListener('click', closeSearch);
+    if (searchOverlay) {
+        searchOverlay.addEventListener('click', function (e) {
+            if (e.target === searchOverlay) closeSearch();
+        });
+    }
 
     /* ── stream tabs ── */
     var tabs  = document.querySelectorAll('.tab-btn[data-tab]');
@@ -96,7 +120,7 @@
 
             function restore() { btn.disabled = false; btn.innerHTML = origHtml; }
 
-            buildSnapCard(btn.dataset.image, btn.dataset.logo, btn.dataset.title, btn.dataset.category)
+            buildSnapCard(btn.dataset.image, btn.dataset.logo, btn.dataset.title, btn.dataset.category, btn.dataset.date)
                 .then(function (canvas) { return saveSnapCanvas(canvas); })
                 .catch(function (err) {
                     console.error('Snap failed:', err);
@@ -153,7 +177,7 @@
         return y + lines.length * lineHeight;
     }
 
-    function buildSnapCard(imageUrl, logoUrl, title, category) {
+    function buildSnapCard(imageUrl, logoUrl, title, category, dateStr) {
         var W = 1080, H = 1350, PHOTO_H = 950, PAD = 60;
 
         return loadImage(imageUrl, true).then(function (photo) {
@@ -198,7 +222,14 @@
                     /* title, in the site's maroon */
                     ctx.fillStyle = '#800000';
                     ctx.font = '800 46px ' + HEADING_FONT;
-                    wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 4);
+                    y = wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 4);
+
+                    /* publish date — important context for anyone sharing the snap */
+                    if (dateStr) {
+                        ctx.fillStyle = '#6b7280';
+                        ctx.font = '600 28px ' + HEADING_FONT;
+                        ctx.fillText(dateStr, PAD, y + 20);
+                    }
 
                     return canvas;
                 });

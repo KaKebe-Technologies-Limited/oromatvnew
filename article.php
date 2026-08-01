@@ -194,6 +194,7 @@ function render_side_feature_card(array $a): void
                         data-logo="<?= h(BASE_PATH) ?>/assets/img/oroma_circle_logo.svg"
                         data-title="<?= h($article['title']) ?>"
                         data-category="<?= h($article['category_name'] ?? '') ?>"
+                        data-date="<?= h(format_date($article['created_at'])) ?>"
                         title="Save a shareable snapshot of this article">
                     <i class="fas fa-camera"></i> <span class="snap-text">Snap</span>
                 </button>

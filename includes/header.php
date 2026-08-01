@@ -43,6 +43,20 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
 <div id="reading-progress" aria-hidden="true"></div>
 <div class="nav-overlay" id="navOverlay"></div>
 
+<!-- ── SEARCH OVERLAY ── -->
+<div class="search-overlay" id="searchOverlay">
+    <div class="search-modal">
+        <button type="button" class="search-close" id="searchClose" aria-label="Close search">
+            <i class="fas fa-times"></i>
+        </button>
+        <form action="<?= h(BASE_PATH) ?>/news.php" method="get" class="search-form">
+            <i class="fas fa-search"></i>
+            <input type="text" name="q" id="searchInput" placeholder="Search news…" autocomplete="off" />
+            <button type="submit" aria-label="Search"><i class="fas fa-arrow-right"></i></button>
+        </form>
+    </div>
+</div>
+
 <!-- ── SITE HEADER ── -->
 <header class="site-header" id="siteHeader">
     <div class="inner">
