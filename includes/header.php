@@ -46,6 +46,11 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
 <!-- ── SITE HEADER ── -->
 <header class="site-header" id="siteHeader">
     <div class="inner">
+        <!-- Search -->
+        <button class="nav-search-btn" id="searchToggle" aria-label="Search" title="Search">
+            <i class="fas fa-search"></i>
+        </button>
+
         <!-- Logo -->
         <a href="<?= h(BASE_PATH) ?>/index.php" class="brand">
             <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
@@ -68,9 +73,6 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
 
         <!-- Right controls -->
         <div class="header-right">
-            <button class="nav-search-btn" id="searchToggle" aria-label="Search" title="Search">
-                <i class="fas fa-search"></i>
-            </button>
             <a href="<?= h(BASE_PATH) ?>/index.php#watch"
                class="btn-watch-live <?= $streamStatus === 'live' ? 'is-live' : '' ?>">
                 <span class="dot"></span>

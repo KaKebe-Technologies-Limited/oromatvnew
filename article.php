@@ -67,11 +67,37 @@ $nextArticle = $nextStmt->fetch();
 $activeNav = 'news';
 $pageTitle = ($article['meta_title'] ?: $article['title']) . ' · ' . SITE_NAME;
 $pageDescription = $article['meta_description'] ?: ($article['excerpt'] ?: make_excerpt($article['content']));
-$pageImage = $article['featured_image'] ? (SITE_URL . '/' . $article['featured_image']) : (SITE_URL . '/img/logo.png');
 $pageCanonical = SITE_URL . '/article.php?slug=' . urlencode($article['slug']);
 $pageType = 'article';
+
+// ── OG image: featured image → first img in content → logo fallback ──
+if ($article['featured_image']) {
+    $pageImage = SITE_URL . '/' . $article['featured_image'];
+} else {
+    // Try to extract the first <img src="..."> from article content
+    $firstImg = null;
+    if (preg_match('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $article['content'], $imgMatch)) {
+        $src = $imgMatch[1];
+        // Make absolute if relative
+        if (!preg_match('#^https?://#i', $src)) {
+            $src = SITE_URL . '/' . ltrim($src, '/');
+        }
+        $firstImg = $src;
+    }
+    $pageImage = $firstImg ?? (SITE_URL . '/img/logo.png');
+}
+
 $showViews   = get_setting('show_article_views', '1') !== '0';
 $articleFont = $article['body_font'] ?? get_setting('article_font', 'inter');
+
+// Strip excessive blank lines pasted from AI/Word docs
+$cleanContent = $article['content'];
+// Remove empty <p> tags (whitespace, &nbsp;, <br> only)
+$cleanContent = preg_replace('/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/i', '', $cleanContent);
+// Collapse 3+ consecutive <br> into one line break
+$cleanContent = preg_replace('/(<br\s*\/?>\s*){3,}/i', '<br />', $cleanContent);
+// Remove runs of 3+ consecutive closing+opening p tags (over-spaced paragraphs)
+$cleanContent = preg_replace('/(<\/p>\s*<p[^>]*>\s*){2,}/i', '</p><p>', $cleanContent);
 
 // Preload Lora font in <head> if needed
 $extraHeadHtml = '';
@@ -162,7 +188,7 @@ function render_side_feature_card(array $a): void
                 <span><i class="fas fa-clock"></i> <?= reading_time($article['content']) ?> min read</span>
             </div>
 
-            <div class="article-body article-font-<?= h($articleFont) ?>"><?= $article['content'] ?></div>
+            <div class="article-body article-font-<?= h($articleFont) ?>"><?= $cleanContent ?></div>
 
             <?php if ($tags): ?>
                 <div class="article-tags">

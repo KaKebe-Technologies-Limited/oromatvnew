@@ -138,7 +138,23 @@ function sanitize_html(string $html): string
     foreach (iterator_to_array($root->childNodes) as $child) {
         $out .= $doc->saveHTML($child);
     }
-    return $out;
+    return strip_excess_whitespace($out);
+}
+
+/**
+ * Collapse the oversized blank gaps AI/word-processor pastes leave between paragraphs
+ * (empty <p>/<div> spacers, runs of <br>) so paragraph spacing comes only from CSS margin.
+ */
+function strip_excess_whitespace(string $html): string
+{
+    // Collapse 2+ consecutive <br> tags into a single one
+    $html = preg_replace('/(<br\s*\/?>\s*){2,}/iu', '<br />', $html);
+    // Remove empty <p>/<div> tags (including those with only &nbsp; / U+00A0, spaces, or a lone <br>)
+    $emptyPattern = '/<(p|div)[^>]*>(\s|&nbsp;|\x{00A0}|<br\s*\/?>)*<\/\1>/iu';
+    $html = preg_replace($emptyPattern, '', $html);
+    // Run again in case removing inner empties left an outer wrapper newly-empty
+    $html = preg_replace($emptyPattern, '', $html);
+    return trim($html);
 }
 
 // ---------- CSRF ----------

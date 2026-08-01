@@ -53,16 +53,15 @@ $streamStatus   = get_setting('stream_status', 'offline');
 require __DIR__ . '/includes/header.php';
 ?>
 
-<?php /* ── BREAKING NEWS TICKER ── */ if ($breakingNews): ?>
-<div class="breaking-bar" role="marquee" aria-label="Breaking news">
-    <span class="breaking-label"><i class="fas fa-bolt"></i> BREAKING</span>
-    <div class="breaking-track-wrap">
-        <div class="breaking-track" id="breakingTrack">
+<?php /* ── NEWS TICKER ── */ if ($breakingNews): ?>
+<div class="news-ticker-bar" aria-label="Latest news headlines">
+    <div class="ticker-track-wrap">
+        <div class="ticker-scroll">
             <?php foreach (array_merge($breakingNews, $breakingNews) as $bn): ?>
                 <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($bn['slug']) ?>">
                     <?= h($bn['title']) ?>
                 </a>
-                <span class="breaking-sep">◆</span>
+                <span class="ticker-dot">◆</span>
             <?php endforeach; ?>
         </div>
     </div>
@@ -85,19 +84,18 @@ $hero3 = $featured[2] ?? null;
                 ? BASE_PATH . '/' . $hero1['featured_image']
                 : placeholder_image($hero1['id'], 900, 560); ?>
             <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
+
+            <!-- Logo watermark — top left -->
+            <div class="hero-logo-watermark">
+                <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
+            </div>
+
+            <!-- Title only — faint gradient bottom -->
             <div class="hero-overlay">
                 <?php if ($hero1['category_name']): ?>
                     <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
                 <?php endif; ?>
                 <h1><?= h($hero1['title']) ?></h1>
-                <p><?= h($hero1['excerpt'] ?: make_excerpt($hero1['content'], 120)) ?></p>
-                <div class="hero-meta">
-                    <span><?= h($hero1['author_name'] ?? 'Oroma TV') ?></span>
-                    <span class="sep">·</span>
-                    <span><?= h(time_ago($hero1['created_at'])) ?></span>
-                    <span class="sep">·</span>
-                    <span><i class="fas fa-clock"></i> <?= reading_time($hero1['content']) ?> min read</span>
-                </div>
             </div>
         </a>
 
