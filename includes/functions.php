@@ -483,3 +483,98 @@ function comment_initial(string $name): string
     $name = trim($name);
     return $name !== '' ? mb_strtoupper(mb_substr($name, 0, 1)) : '?';
 }
+
+// ---------- CNN-layout helpers ----------
+
+/** All active categories ordered by display_order. */
+function get_active_categories(): array
+{
+    return db()->query(
+        "SELECT * FROM categories WHERE is_active = 1 ORDER BY display_order ASC, name ASC"
+    )->fetchAll();
+}
+
+/** Latest breaking-news headlines for the ticker. */
+function get_breaking_news(int $limit = 10): array
+{
+    $stmt = db()->prepare(
+        "SELECT title, slug FROM articles
+         WHERE status = 'published' AND is_breaking = 1
+         ORDER BY created_at DESC LIMIT ?"
+    );
+    $stmt->execute([$limit]);
+    return $stmt->fetchAll();
+}
+
+/** Up to $limit featured articles for the hero section. */
+function get_featured_articles(int $limit = 5): array
+{
+    $stmt = db()->prepare(
+        "SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                u.name AS author_name
+         FROM articles a
+         LEFT JOIN categories c ON c.id = a.category_id
+         LEFT JOIN users u ON u.id = a.author_id
+         WHERE a.status = 'published' AND a.is_featured = 1
+         ORDER BY a.created_at DESC LIMIT ?"
+    );
+    $stmt->execute([$limit]);
+    return $stmt->fetchAll();
+}
+
+/** Latest published articles with optional category filter. */
+function get_latest_articles(int $limit = 8, ?int $categoryId = null, int $offset = 0): array
+{
+    if ($categoryId) {
+        $stmt = db()->prepare(
+            "SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                    u.name AS author_name
+             FROM articles a
+             LEFT JOIN categories c ON c.id = a.category_id
+             LEFT JOIN users u ON u.id = a.author_id
+             WHERE a.status = 'published' AND a.category_id = ?
+             ORDER BY a.created_at DESC LIMIT ? OFFSET ?"
+        );
+        $stmt->execute([$categoryId, $limit, $offset]);
+    } else {
+        $stmt = db()->prepare(
+            "SELECT a.*, c.name AS category_name, c.slug AS category_slug,
+                    u.name AS author_name
+             FROM articles a
+             LEFT JOIN categories c ON c.id = a.category_id
+             LEFT JOIN users u ON u.id = a.author_id
+             WHERE a.status = 'published'
+             ORDER BY a.created_at DESC LIMIT ? OFFSET ?"
+        );
+        $stmt->execute([$limit, $offset]);
+    }
+    return $stmt->fetchAll();
+}
+
+/** Estimate reading time in minutes from HTML content. */
+function reading_time(string $html): int
+{
+    $words = str_word_count(strip_tags($html));
+    return max(1, (int) ceil($words / 200));
+}
+
+/**
+ * Return a real Unsplash/Picsum fallback image URL for cards with no image.
+ * Uses article ID as seed so each card gets a consistent but varied image.
+ */
+function placeholder_image(int $seed, int $w = 640, int $h = 400): string
+{
+    return "https://picsum.photos/seed/{$seed}/{$w}/{$h}";
+}
+
+/** Get all categories for admin management with article counts. */
+function get_categories_with_counts(): array
+{
+    return db()->query(
+        "SELECT c.*, COUNT(a.id) AS article_count
+         FROM categories c
+         LEFT JOIN articles a ON a.category_id = c.id AND a.status = 'published'
+         GROUP BY c.id
+         ORDER BY c.display_order ASC, c.name ASC"
+    )->fetchAll();
+}

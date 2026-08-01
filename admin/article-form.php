@@ -49,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $metaTitle = trim((string) ($_POST['meta_title'] ?? '')) ?: null;
         $metaDescription = trim((string) ($_POST['meta_description'] ?? '')) ?: null;
         $status = in_array($_POST['status'] ?? '', ['draft', 'published'], true) ? $_POST['status'] : 'draft';
-        $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
+        $isFeatured  = isset($_POST['is_featured'])  ? 1 : 0;
+        $isBreaking  = isset($_POST['is_breaking'])  ? 1 : 0;
 
         $featuredImage = $existing['featured_image'] ?? null;
         if (!empty($_FILES['featured_image_file']) && $_FILES['featured_image_file']['error'] === UPLOAD_ERR_OK) {
@@ -73,19 +74,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing) {
                 $stmt = db()->prepare(
                     'UPDATE articles SET title=?, slug=?, excerpt=?, content=?, featured_image=?, featured_image_caption=?, category_id=?,
-                     meta_title=?, meta_description=?, status=?, is_featured=? WHERE id=?'
+                     meta_title=?, meta_description=?, status=?, is_featured=?, is_breaking=? WHERE id=?'
                 );
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $id]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $id]);
                 $articleId = $id;
             } else {
                 $stmt = db()->prepare(
                     'INSERT INTO articles (title, slug, excerpt, content, featured_image, featured_image_caption, category_id, author_id,
-                     meta_title, meta_description, status, is_featured)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+                     meta_title, meta_description, status, is_featured, is_breaking)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 );
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId, $authorId,
-                    $metaTitle, $metaDescription, $status, $isFeatured]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking]);
                 $articleId = (int) db()->lastInsertId();
             }
 
@@ -117,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'meta_description' => $_POST['meta_description'] ?? '',
         'status' => $_POST['status'] ?? 'draft',
         'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
+        'is_breaking' => isset($_POST['is_breaking']) ? 1 : 0,
         'featured_image_caption' => $_POST['featured_image_caption'] ?? '',
         'id' => $id,
     ]);
@@ -207,7 +209,13 @@ require __DIR__ . '/includes/admin-header.php';
                 <div class="form-group">
                     <label class="toggle-switch">
                         <input type="checkbox" name="is_featured" value="1" <?= !empty($existing['is_featured']) ? 'checked' : '' ?> />
-                        Featured article
+                        Featured article (shows in hero section)
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_breaking" value="1" <?= !empty($existing['is_breaking']) ? 'checked' : '' ?> />
+                        Breaking news (shows in ticker)
                     </label>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
@@ -241,13 +249,16 @@ require __DIR__ . '/includes/admin-header.php';
                 <div class="card-head"><h2>Category &amp; Tags</h2></div>
                 <div class="form-group">
                     <label for="category">Category</label>
-                    <input class="form-control" type="text" id="category" name="category" list="category-list"
-                           value="<?= h($existing['category_name'] ?? '') ?>" placeholder="e.g. News" />
-                    <datalist id="category-list">
-                        <?php foreach ($categories as $c): ?>
-                            <option value="<?= h($c['name']) ?>"></option>
+                    <select class="form-control" id="category" name="category">
+                        <option value="">— No category —</option>
+                        <?php
+                        $allCats = db()->query('SELECT name FROM categories WHERE is_active=1 ORDER BY display_order ASC, name ASC')->fetchAll();
+                        foreach ($allCats as $c):
+                            $sel = ($existing['category_name'] ?? '') === $c['name'] ? 'selected' : '';
+                        ?>
+                            <option value="<?= h($c['name']) ?>" <?= $sel ?>><?= h($c['name']) ?></option>
                         <?php endforeach; ?>
-                    </datalist>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="tags">Tags</label>

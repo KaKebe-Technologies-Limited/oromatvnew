@@ -1,178 +1,251 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
 
-$activeNav = 'home';
-$bodyClass = 'is-home';
-$pageTitle = SITE_NAME . ' · Live Stream & News';
+$activeNav  = 'home';
+$bodyClass  = 'is-home';
+$pageTitle  = SITE_NAME . ' · Live Stream & News';
 
-$youtubeStreams = db()->query(
-    "SELECT * FROM streams WHERE type = 'youtube' AND is_active = 1 ORDER BY is_default DESC, sort_order ASC, id ASC"
-)->fetchAll();
+// ── data ──────────────────────────────────────────────────────
+$categories    = get_active_categories();
+$breakingNews  = get_breaking_news(12);
 
-$radioStream = db()->query(
-    "SELECT * FROM streams WHERE type = 'radio' AND is_active = 1 ORDER BY is_default DESC, sort_order ASC, id ASC LIMIT 1"
-)->fetch();
-
-$defaultYoutube = $youtubeStreams[0] ?? null;
-
-$featured = db()->query(
-    "SELECT a.*, c.name AS category_name, c.slug AS category_slug, u.name AS author_name
-     FROM articles a
-     LEFT JOIN categories c ON c.id = a.category_id
-     LEFT JOIN users u ON u.id = a.author_id
-     WHERE a.status = 'published' AND a.is_featured = 1
-     ORDER BY a.created_at DESC LIMIT 1"
-)->fetch();
-
-$excludeId = $featured['id'] ?? 0;
-$latestStmt = db()->prepare(
-    "SELECT a.*, c.name AS category_name, c.slug AS category_slug, u.name AS author_name
-     FROM articles a
-     LEFT JOIN categories c ON c.id = a.category_id
-     LEFT JOIN users u ON u.id = a.author_id
-     WHERE a.status = 'published' AND a.id != ?
-     ORDER BY a.created_at DESC LIMIT 6"
-);
-$latestStmt->execute([$excludeId]);
-$latest = $latestStmt->fetchAll();
-
-if (!$featured && $latest) {
-    $featured = array_shift($latest);
+$featured = get_featured_articles(5);
+// Fallback: if fewer than 3 featured, pad with latest
+if (count($featured) < 3) {
+    $featIds  = array_column($featured, 'id');
+    $placeholders = count($featIds) ? implode(',', array_fill(0, count($featIds), '?')) : '0';
+    $stmt = db()->prepare(
+        "SELECT a.*, c.name AS category_name, c.slug AS category_slug, u.name AS author_name
+         FROM articles a
+         LEFT JOIN categories c ON c.id = a.category_id
+         LEFT JOIN users u ON u.id = a.author_id
+         WHERE a.status='published' AND a.id NOT IN ($placeholders)
+         ORDER BY a.created_at DESC LIMIT " . (5 - count($featured))
+    );
+    $stmt->execute($featIds ?: []);
+    $featured = array_merge($featured, $stmt->fetchAll());
 }
 
-$trending = get_trending_articles(6, $featured['id'] ?? null);
+// Active category filter (AJAX or page load)
+$filterCatSlug = trim((string)($_GET['cat'] ?? ''));
+$filterCatId   = null;
+if ($filterCatSlug) {
+    foreach ($categories as $c) {
+        if ($c['slug'] === $filterCatSlug) { $filterCatId = (int)$c['id']; break; }
+    }
+}
+
+$latestArticles = get_latest_articles(8, $filterCatId);
+$trending       = get_trending_articles(6);
+
+// Streams
+$youtubeStreams = db()->query(
+    "SELECT * FROM streams WHERE type='youtube' AND is_active=1
+     ORDER BY is_default DESC, sort_order ASC"
+)->fetchAll();
+$radioStream = db()->query(
+    "SELECT * FROM streams WHERE type='radio' AND is_active=1
+     ORDER BY is_default DESC LIMIT 1"
+)->fetch();
+$defaultYoutube = $youtubeStreams[0] ?? null;
+$streamStatus   = get_setting('stream_status', 'offline');
 
 require __DIR__ . '/includes/header.php';
 ?>
 
-<section class="hero-banner">
-    <div class="hero-banner-bg"></div>
-    <div class="container hero-banner-content">
-        <?php if ($streamStatus === 'live'): ?>
-            <span class="badge badge-live"><span class="dot"></span> Live Now</span>
-        <?php else: ?>
-            <span class="badge" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);">Oroma News &amp; Live Media</span>
-        <?php endif; ?>
-        <h1>Your Voice.<br>Your Community.<br>Always On.</h1>
-        <p class="lead">Live TV, radio, and the stories that matter to the Oroma community — streaming free, anywhere in the world.</p>
-        <div class="hero-cta-row">
-            <a href="#watch" class="btn btn-gold btn-lg"><i class="fas fa-play"></i> Watch Live</a>
-            <a href="<?= h(BASE_PATH) ?>/news.php" class="btn btn-outline-light btn-lg"><i class="fas fa-newspaper"></i> Read Latest News</a>
+<?php /* ── BREAKING NEWS TICKER ── */ if ($breakingNews): ?>
+<div class="breaking-bar" role="marquee" aria-label="Breaking news">
+    <span class="breaking-label"><i class="fas fa-bolt"></i> BREAKING</span>
+    <div class="breaking-track-wrap">
+        <div class="breaking-track" id="breakingTrack">
+            <?php foreach (array_merge($breakingNews, $breakingNews) as $bn): ?>
+                <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($bn['slug']) ?>">
+                    <?= h($bn['title']) ?>
+                </a>
+                <span class="breaking-sep">◆</span>
+            <?php endforeach; ?>
         </div>
-    </div>
-</section>
-
-<div class="container section" style="padding-top:56px;">
-    <div class="section-head">
-        <h2>Latest <span>News</span></h2>
-        <a href="<?= h(BASE_PATH) ?>/news.php" class="view-all">View all <i class="fas fa-arrow-right"></i></a>
-    </div>
-
-    <?php if (!$featured && !$latest): ?>
-        <div class="empty-state">
-            <i class="fas fa-newspaper"></i>
-            <p>No articles published yet. Check back soon.</p>
-        </div>
-    <?php else: ?>
-        <?php if ($featured): ?>
-            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($featured['slug']) ?>" class="featured-article">
-                <div class="thumb">
-                    <?php if ($featured['featured_image']): ?>
-                        <img src="<?= h(BASE_PATH . '/' . $featured['featured_image']) ?>" alt="<?= h($featured['title']) ?>" loading="lazy" />
-                    <?php else: ?>
-                        <div class="thumb-fallback"></div>
-                    <?php endif; ?>
-                </div>
-                <div class="body">
-                    <?php if ($featured['category_name']): ?>
-                        <span class="badge badge-category"><?= h($featured['category_name']) ?></span>
-                    <?php endif; ?>
-                    <h2><?= h($featured['title']) ?></h2>
-                    <p><?= h($featured['excerpt'] ?: make_excerpt($featured['content'])) ?></p>
-                    <div class="article-meta">
-                        <span><i class="fas fa-user"></i> <?= h($featured['author_name'] ?? 'Oroma TV') ?></span>
-                        <span class="sep">&middot;</span>
-                        <span><?= h(time_ago($featured['created_at'])) ?></span>
-                    </div>
-                </div>
-            </a>
-        <?php endif; ?>
-
-        <?php if ($latest): ?>
-            <div class="news-grid">
-                <?php foreach ($latest as $article): ?>
-                    <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($article['slug']) ?>" class="article-card">
-                        <div class="thumb">
-                            <?php if ($article['featured_image']): ?>
-                                <img src="<?= h(BASE_PATH . '/' . $article['featured_image']) ?>" alt="<?= h($article['title']) ?>" loading="lazy" />
-                            <?php else: ?>
-                                <div class="thumb-fallback"></div>
-                            <?php endif; ?>
-                        </div>
-                        <div class="body">
-                            <?php if ($article['category_name']): ?>
-                                <span class="badge badge-category"><?= h($article['category_name']) ?></span>
-                            <?php endif; ?>
-                            <h3><?= h($article['title']) ?></h3>
-                            <p class="excerpt"><?= h($article['excerpt'] ?: make_excerpt($article['content'], 100)) ?></p>
-                            <div class="article-meta">
-                                <span><?= h($article['author_name'] ?? 'Oroma TV') ?></span>
-                                <span class="sep">&middot;</span>
-                                <span><?= h(time_ago($article['created_at'])) ?></span>
-                            </div>
-                        </div>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    <?php endif; ?>
-</div>
-
-<?php if ($trending): ?>
-<div class="container section" style="padding-top:8px;padding-bottom:8px;">
-    <div class="section-head">
-        <h2><i class="fas fa-fire" style="color:var(--maroon);"></i> Trending <span>Now</span></h2>
-    </div>
-    <div class="trending-strip">
-        <?php foreach ($trending as $i => $t): ?>
-            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($t['slug']) ?>" class="trending-card">
-                <span class="trending-rank"><?= $i + 1 ?></span>
-                <div class="thumb">
-                    <?php if ($t['featured_image']): ?>
-                        <img src="<?= h(BASE_PATH . '/' . $t['featured_image']) ?>" alt="<?= h($t['title']) ?>" loading="lazy" />
-                    <?php else: ?>
-                        <div class="thumb-fallback"></div>
-                    <?php endif; ?>
-                </div>
-                <div class="body">
-                    <?php if ($t['category_name']): ?>
-                        <span class="badge badge-category"><?= h($t['category_name']) ?></span>
-                    <?php endif; ?>
-                    <h3><?= h($t['title']) ?></h3>
-                    <div class="article-meta"><span><i class="fas fa-eye"></i> <?= (int) $t['views'] ?> views</span></div>
-                </div>
-            </a>
-        <?php endforeach; ?>
     </div>
 </div>
 <?php endif; ?>
 
+<?php /* ── HERO SECTION ── */
+$hero1 = $featured[0] ?? null;
+$hero2 = $featured[1] ?? null;
+$hero3 = $featured[2] ?? null;
+?>
+<?php if ($hero1): ?>
+<section class="hero-section container-wide">
+    <div class="hero-grid">
+
+        <?php /* Main hero card */ ?>
+        <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hero1['slug']) ?>"
+           class="hero-main reveal">
+            <?php $img1 = $hero1['featured_image']
+                ? BASE_PATH . '/' . $hero1['featured_image']
+                : placeholder_image($hero1['id'], 900, 560); ?>
+            <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
+            <div class="hero-overlay">
+                <?php if ($hero1['category_name']): ?>
+                    <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
+                <?php endif; ?>
+                <h1><?= h($hero1['title']) ?></h1>
+                <p><?= h($hero1['excerpt'] ?: make_excerpt($hero1['content'], 120)) ?></p>
+                <div class="hero-meta">
+                    <span><?= h($hero1['author_name'] ?? 'Oroma TV') ?></span>
+                    <span class="sep">·</span>
+                    <span><?= h(time_ago($hero1['created_at'])) ?></span>
+                    <span class="sep">·</span>
+                    <span><i class="fas fa-clock"></i> <?= reading_time($hero1['content']) ?> min read</span>
+                </div>
+            </div>
+        </a>
+
+        <?php /* Side cards */ ?>
+        <div class="hero-side">
+            <?php foreach ([$hero2, $hero3] as $hs): if (!$hs) continue; ?>
+            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hs['slug']) ?>"
+               class="hero-side-card reveal">
+                <?php $hsImg = $hs['featured_image']
+                    ? BASE_PATH . '/' . $hs['featured_image']
+                    : placeholder_image($hs['id'], 480, 300); ?>
+                <div class="thumb">
+                    <img src="<?= h($hsImg) ?>" alt="<?= h($hs['title']) ?>" loading="lazy" />
+                </div>
+                <div class="body">
+                    <?php if ($hs['category_name']): ?>
+                        <span class="cat-badge cat-badge-sm"><?= h($hs['category_name']) ?></span>
+                    <?php endif; ?>
+                    <h3><?= h($hs['title']) ?></h3>
+                    <p class="excerpt"><?= h($hs['excerpt'] ?: make_excerpt($hs['content'], 80)) ?></p>
+                    <div class="card-meta">
+                        <span><?= h(time_ago($hs['created_at'])) ?></span>
+                        <span class="sep">·</span>
+                        <span><?= reading_time($hs['content']) ?> min</span>
+                    </div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+
+    </div>
+</section>
+<?php endif; ?>
+
+<?php /* ── CATEGORY QUICK FILTER ── */ ?>
+<div class="container">
+    <div class="cat-filter-bar reveal" id="catFilterBar">
+        <a href="<?= h(BASE_PATH) ?>/index.php"
+           class="cat-pill<?= $filterCatSlug === '' ? ' active' : '' ?>">All</a>
+        <?php foreach ($categories as $cat): ?>
+            <a href="<?= h(BASE_PATH) ?>/index.php?cat=<?= urlencode($cat['slug']) ?>"
+               class="cat-pill<?= $filterCatSlug === $cat['slug'] ? ' active' : '' ?>">
+                <i class="fas <?= h($cat['icon'] ?: 'fa-folder') ?>"></i>
+                <?= h($cat['name']) ?>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</div>
+
+<?php /* ── LATEST NEWS GRID ── */ ?>
+<section class="container section" id="latestNews">
+    <div class="section-head reveal">
+        <h2>Latest <span>News</span></h2>
+        <a href="<?= h(BASE_PATH) ?>/news.php" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+    <div class="news-grid-4" id="newsGrid">
+        <?php if (!$latestArticles): ?>
+            <div class="empty-state" style="grid-column:1/-1;">
+                <i class="fas fa-newspaper"></i>
+                <p>No articles published yet. Check back soon.</p>
+            </div>
+        <?php else: foreach ($latestArticles as $i => $a): ?>
+            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>"
+               class="news-card reveal reveal-delay-<?= min($i % 4 + 1, 4) ?>">
+                <div class="thumb">
+                    <?php $aImg = $a['featured_image']
+                        ? BASE_PATH . '/' . $a['featured_image']
+                        : placeholder_image($a['id'], 480, 300); ?>
+                    <img src="<?= h($aImg) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
+                    <?php if ($a['category_name']): ?>
+                        <span class="cat-badge cat-badge-sm"><?= h($a['category_name']) ?></span>
+                    <?php endif; ?>
+                </div>
+                <div class="content">
+                    <h3><?= h($a['title']) ?></h3>
+                    <p class="excerpt"><?= h($a['excerpt'] ?: make_excerpt($a['content'], 90)) ?></p>
+                    <div class="card-meta">
+                        <span class="author"><?= h($a['author_name'] ?? 'Oroma TV') ?></span>
+                        <span class="sep">·</span>
+                        <span><?= h(time_ago($a['created_at'])) ?></span>
+                    </div>
+                </div>
+            </a>
+        <?php endforeach; endif; ?>
+    </div>
+
+    <div style="text-align:center;margin-top:36px;" class="reveal">
+        <a href="<?= h(BASE_PATH) ?>/news.php<?= $filterCatSlug ? '?category=' . urlencode($filterCatSlug) : '' ?>"
+           class="btn btn-outline-dark">
+            Load More Stories <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+</section>
+
+<?php /* ── TRENDING NOW ── */ ?>
+<?php if ($trending): ?>
+<section class="container section" style="padding-top:0;">
+    <div class="section-head reveal">
+        <h2><i class="fas fa-fire" style="color:var(--maroon)"></i> Trending <span>Now</span></h2>
+        <a href="<?= h(BASE_PATH) ?>/news.php" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="trending-strip">
+        <?php foreach ($trending as $i => $t): ?>
+        <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($t['slug']) ?>"
+           class="trending-card reveal">
+            <div class="thumb">
+                <?php $tImg = $t['featured_image']
+                    ? BASE_PATH . '/' . $t['featured_image']
+                    : placeholder_image($t['id'], 360, 220); ?>
+                <img src="<?= h($tImg) ?>" alt="<?= h($t['title']) ?>" loading="lazy" />
+                <span class="trending-rank <?= $i === 0 ? 'top-rank' : '' ?>"><?= $i + 1 ?></span>
+            </div>
+            <div class="body">
+                <?php if ($t['category_name']): ?>
+                    <span class="cat-badge cat-badge-sm"><?= h($t['category_name']) ?></span>
+                <?php endif; ?>
+                <h3><?= h($t['title']) ?></h3>
+                <div class="card-meta">
+                    <i class="fas fa-eye"></i> <?= number_format((int)$t['views']) ?> views
+                </div>
+            </div>
+        </a>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php /* ── LIVE STREAM SECTION ── */ ?>
 <section class="watch-section" id="watch">
     <div class="watch-banner-bg"></div>
     <div class="container">
-        <div class="watch-section-head">
+        <div class="watch-section-head reveal">
+            <?php if ($streamStatus === 'live'): ?>
+                <span class="live-dot-badge"><span class="dot"></span> Live Now</span>
+            <?php endif; ?>
             <h2>Watch &amp; Listen <span>Live</span></h2>
-            <p>Tune in to Oroma TV and Oroma Radio, streaming straight from the source.</p>
+            <p>Stream Oroma TV and Oroma Radio — free, anywhere in the world.</p>
         </div>
 
-        <div class="player-card">
+        <div class="player-card reveal">
             <div class="player-header">
                 <div>
-                    <h3 style="font-size:17px;font-weight:700;">Now Streaming</h3>
-                    <p style="color:var(--text-muted);font-size:13px;margin-top:2px;">Stream · Watch · Connect</p>
+                    <h3>Now Streaming</h3>
+                    <p>Stream · Watch · Connect</p>
                 </div>
                 <?php if ($streamStatus === 'live'): ?>
-                    <span class="badge badge-live"><span class="dot"></span> Live Now</span>
+                    <span class="badge badge-live"><span class="dot"></span> Live</span>
                 <?php else: ?>
                     <span class="badge badge-offline"><span class="dot"></span> Offline</span>
                 <?php endif; ?>
@@ -192,18 +265,15 @@ require __DIR__ . '/includes/header.php';
                     <?php if ($defaultYoutube): ?>
                         <iframe id="youtubePlayer"
                             src="<?= h(youtube_embed_url($defaultYoutube['url_or_id'])) ?>"
-                            allow="autoplay; encrypted-media"
-                            allowfullscreen></iframe>
+                            allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     <?php else: ?>
                         <div class="empty-stream">
                             <i class="fas fa-tv"></i>
-                            <div>No live stream configured yet.</div>
-                            <div style="font-size:12px;opacity:0.7;">Check back soon, or set one up in the Admin Panel.</div>
+                            <div>No live stream configured.</div>
                         </div>
                     <?php endif; ?>
                 </div>
-
-                <?php if (count($youtubeStreams) > 0): ?>
+                <?php if (count($youtubeStreams) > 1): ?>
                     <div class="channel-selector">
                         <?php foreach ($youtubeStreams as $i => $s): ?>
                             <button class="channel-btn<?= $i === 0 ? ' active-channel' : '' ?>"
@@ -220,13 +290,32 @@ require __DIR__ . '/includes/header.php';
                     <?php if ($radioStream): ?>
                         <iframe src="<?= h($radioStream['url_or_id']) ?>" allow="autoplay" loading="lazy"></iframe>
                     <?php else: ?>
-                        <div class="empty-stream" style="background:var(--navy);height:100%;border-radius:var(--radius-md);">
+                        <div class="empty-stream" style="height:200px;">
                             <i class="fas fa-headphones"></i>
-                            <div>No radio stream configured yet.</div>
+                            <div>No radio stream configured.</div>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+<?php /* ── NEWSLETTER ── */ ?>
+<section class="newsletter-section">
+    <div class="container">
+        <div class="newsletter-box reveal">
+            <div class="newsletter-text">
+                <i class="fas fa-envelope-open-text"></i>
+                <div>
+                    <h3>Stay Informed</h3>
+                    <p>Get the latest Oroma TV news delivered to your inbox.</p>
+                </div>
+            </div>
+            <form class="newsletter-form" onsubmit="return false;">
+                <input type="email" placeholder="Your email address" aria-label="Email address" />
+                <button type="submit" class="btn btn-gold">Subscribe <i class="fas fa-arrow-right"></i></button>
+            </form>
         </div>
     </div>
 </section>

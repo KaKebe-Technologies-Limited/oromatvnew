@@ -1,18 +1,16 @@
 <?php
 /**
  * Shared public-site header.
- * Pages may set before including this file:
- *   $pageTitle, $pageDescription, $pageImage, $pageCanonical, $pageType ('website'|'article')
  */
 require_once __DIR__ . '/functions.php';
 
-$pageTitle = $pageTitle ?? SITE_NAME . ' · Live Stream & News';
-$pageDescription = $pageDescription ?? 'Watch ' . SITE_NAME . ' live, listen to the radio, and read the latest news — ' . SITE_TAGLINE . '.';
-$pageImage = $pageImage ?? (SITE_URL . '/img/logo.png');
-$pageCanonical = $pageCanonical ?? (SITE_URL . ($_SERVER['REQUEST_URI'] ?? ''));
-$pageType = $pageType ?? 'website';
-
-$streamStatus = get_setting('stream_status', 'offline');
+$pageTitle       = $pageTitle       ?? SITE_NAME . ' · Live Stream & News';
+$pageDescription = $pageDescription ?? 'Watch ' . SITE_NAME . ' live, listen to the radio, and read the latest news.';
+$pageImage       = $pageImage       ?? (SITE_URL . '/img/logo.png');
+$pageCanonical   = $pageCanonical   ?? (SITE_URL . ($_SERVER['REQUEST_URI'] ?? ''));
+$pageType        = $pageType        ?? 'website';
+$streamStatus    = get_setting('stream_status', 'offline');
+$navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is_active=1 ORDER BY display_order ASC, name ASC LIMIT 10")->fetchAll();
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,62 +20,72 @@ $streamStatus = get_setting('stream_status', 'offline');
     <meta name="description" content="<?= h($pageDescription) ?>" />
     <link rel="canonical" href="<?= h($pageCanonical) ?>" />
     <meta name="theme-color" content="#800000" />
-
-    <meta property="og:site_name" content="<?= h(SITE_NAME) ?>" />
-    <meta property="og:type" content="<?= h($pageType) ?>" />
-    <meta property="og:title" content="<?= h($pageTitle) ?>" />
+    <meta property="og:site_name"   content="<?= h(SITE_NAME) ?>" />
+    <meta property="og:type"        content="<?= h($pageType) ?>" />
+    <meta property="og:title"       content="<?= h($pageTitle) ?>" />
     <meta property="og:description" content="<?= h($pageDescription) ?>" />
-    <meta property="og:image" content="<?= h($pageImage) ?>" />
-    <meta property="og:url" content="<?= h($pageCanonical) ?>" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="<?= h($pageTitle) ?>" />
+    <meta property="og:image"       content="<?= h($pageImage) ?>" />
+    <meta property="og:url"         content="<?= h($pageCanonical) ?>" />
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="<?= h($pageTitle) ?>" />
     <meta name="twitter:description" content="<?= h($pageDescription) ?>" />
-    <meta name="twitter:image" content="<?= h($pageImage) ?>" />
-
+    <meta name="twitter:image"       content="<?= h($pageImage) ?>" />
     <link rel="icon" href="<?= h(BASE_PATH) ?>/img/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
 </head>
 <body class="<?= h($bodyClass ?? '') ?>">
 
-<?php if (($bodyClass ?? '') === 'is-home'): ?>
-<div class="home-motion-bg" aria-hidden="true">
-    <span class="blob blob-1"></span>
-    <span class="blob blob-2"></span>
-    <span class="blob blob-3"></span>
-</div>
-<?php endif; ?>
+<div id="reading-progress" aria-hidden="true"></div>
+<div class="nav-overlay" id="navOverlay"></div>
 
-<header class="site-header">
+<!-- ── SITE HEADER ── -->
+<header class="site-header" id="siteHeader">
     <div class="inner">
+        <!-- Logo -->
         <a href="<?= h(BASE_PATH) ?>/index.php" class="brand">
             <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
         </a>
 
-        <nav class="site-nav" id="siteNav">
-            <a href="<?= h(BASE_PATH) ?>/news.php"<?= ($activeNav ?? '') === 'news' ? ' class="active"' : '' ?>>News</a>
-            <a href="<?= h(BASE_PATH) ?>/index.php"<?= ($activeNav ?? '') === 'home' ? ' class="active"' : '' ?>>Home</a>
-            <a href="<?= h(BASE_PATH) ?>/index.php#watch" class="nav-live-btn <?= $streamStatus === 'live' ? 'is-live' : '' ?>">
-                <span class="dot"></span> <?= $streamStatus === 'live' ? 'Live Now' : 'Watch' ?>
-            </a>
+        <!-- Nav -->
+        <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+            <a href="<?= h(BASE_PATH) ?>/index.php"  <?= ($activeNav ?? '') === 'home'  ? 'class="active"' : '' ?>>Home</a>
+            <a href="<?= h(BASE_PATH) ?>/news.php"   <?= ($activeNav ?? '') === 'news'  ? 'class="active"' : '' ?>>News</a>
+            <?php foreach (array_slice($navCategories, 0, 6) as $nc): ?>
+                <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($nc['slug']) ?>"
+                   <?= ($activeNav ?? '') === $nc['slug'] ? 'class="active"' : '' ?>>
+                    <?= h($nc['name']) ?>
+                </a>
+            <?php endforeach; ?>
         </nav>
 
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+        <!-- Right controls -->
+        <div class="header-right">
+            <button class="nav-search-btn" id="searchToggle" aria-label="Search" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+            <a href="<?= h(BASE_PATH) ?>/index.php#watch"
+               class="btn-watch-live <?= $streamStatus === 'live' ? 'is-live' : '' ?>">
+                <span class="dot"></span>
+                <span class="btn-label"><?= $streamStatus === 'live' ? 'Live Now' : 'Watch Live' ?></span>
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
     </div>
 </header>
 
-<?php $flashes = get_flashes(); ?>
-<?php if ($flashes): ?>
-    <div class="container flash-stack" style="margin-top:20px;">
-        <?php foreach ($flashes as $f): ?>
-            <div class="flash flash-<?= h($f['type']) ?>">
-                <i class="fas fa-<?= $f['type'] === 'success' ? 'circle-check' : 'circle-exclamation' ?>"></i>
-                <?= h($f['message']) ?>
-            </div>
-        <?php endforeach; ?>
-    </div>
+<?php $flashes = get_flashes(); if ($flashes): ?>
+<div class="container flash-stack" style="margin-top:16px;">
+    <?php foreach ($flashes as $f): ?>
+        <div class="flash flash-<?= h($f['type']) ?>">
+            <i class="fas fa-<?= $f['type'] === 'success' ? 'circle-check' : 'circle-exclamation' ?>"></i>
+            <?= h($f['message']) ?>
+        </div>
+    <?php endforeach; ?>
+</div>
 <?php endif; ?>

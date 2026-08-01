@@ -271,21 +271,4 @@ function render_side_feature_card(array $a): void
     </div>
 </div>
 
-<script>
-document.querySelectorAll('.js-copy-link').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        navigator.clipboard.writeText(this.dataset.url).then(() => {
-            var icon = this.querySelector('i');
-            var text = this.querySelector('.copy-text');
-            icon.className = 'fas fa-check';
-            if (text) text.textContent = 'Copied!';
-            setTimeout(() => {
-                icon.className = 'fas fa-link';
-                if (text) text.textContent = 'Copy link';
-            }, 1500);
-        });
-    });
-});
-</script>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>
