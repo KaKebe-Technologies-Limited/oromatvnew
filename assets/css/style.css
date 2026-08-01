@@ -1026,8 +1026,8 @@ body.is-home .hero-banner { display:none; } /* homepage uses hero-section grid i
 
     .article-main { min-width: 0; overflow: hidden; }
 
-    /* Cover image — no radius, full bleed */
-    .article-cover { border-radius: 0; margin-left: -16px; margin-right: -16px; }
+    /* Cover image — small breathing room on top, tiny inset on the sides */
+    .article-cover { margin-top: 14px; }
 
     .article-title { font-size: 22px; line-height: 1.25; }
 
