@@ -9,9 +9,10 @@ $pageTitle  = SITE_NAME . ' · Live Stream & News';
 $categories    = get_active_categories();
 $breakingNews  = get_breaking_news(12);
 
-$featured = get_featured_articles(5);
-// Fallback: if fewer than 3 featured, pad with latest
-if (count($featured) < 3) {
+// 3 for the hero (main + 2 side cards) + up to 4 more for the "Highlighted Stories" strip below it
+$featured = get_featured_articles(7);
+// Fallback: pad with latest published so the hero and the highlights strip are never left empty
+if (count($featured) < 7) {
     $featIds  = array_column($featured, 'id');
     $placeholders = count($featIds) ? implode(',', array_fill(0, count($featIds), '?')) : '0';
     $stmt = db()->prepare(
@@ -20,7 +21,7 @@ if (count($featured) < 3) {
          LEFT JOIN categories c ON c.id = a.category_id
          LEFT JOIN users u ON u.id = a.author_id
          WHERE a.status='published' AND a.id NOT IN ($placeholders)
-         ORDER BY a.created_at DESC LIMIT " . (5 - count($featured))
+         ORDER BY a.created_at DESC LIMIT " . (7 - count($featured))
     );
     $stmt->execute($featIds ?: []);
     $featured = array_merge($featured, $stmt->fetchAll());
@@ -72,6 +73,7 @@ require __DIR__ . '/includes/header.php';
 $hero1 = $featured[0] ?? null;
 $hero2 = $featured[1] ?? null;
 $hero3 = $featured[2] ?? null;
+$highlighted = array_slice($featured, 3, 4);
 ?>
 <?php if ($hero1): ?>
 <section class="hero-section container-wide">
@@ -117,6 +119,28 @@ $hero3 = $featured[2] ?? null;
             <?php endforeach; ?>
         </div>
 
+    </div>
+</section>
+<?php endif; ?>
+
+<?php /* ── HIGHLIGHTED STORIES (extra featured picks from admin, below the hero) ── */ ?>
+<?php if ($highlighted): ?>
+<section class="container-wide highlighted-section">
+    <div class="highlighted-list">
+        <?php foreach ($highlighted as $h): ?>
+            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($h['slug']) ?>" class="highlighted-item reveal">
+                <div class="highlighted-thumb">
+                    <?php $hImg = article_thumb_src($h['featured_image'], $h['id'], 200, 200); ?>
+                    <img src="<?= h($hImg) ?>" alt="<?= h($h['title']) ?>" loading="lazy" />
+                    <?= render_thumb_logo() ?>
+                </div>
+                <div class="highlighted-body">
+                    <?php if ($h['category_name']): ?><span class="side-cat"><?= h($h['category_name']) ?></span><?php endif; ?>
+                    <h4><?= h($h['title']) ?></h4>
+                    <div class="article-meta"><span><?= h(time_ago($h['created_at'])) ?></span></div>
+                </div>
+            </a>
+        <?php endforeach; ?>
     </div>
 </section>
 <?php endif; ?>

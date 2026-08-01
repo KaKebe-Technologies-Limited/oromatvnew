@@ -211,7 +211,7 @@ require __DIR__ . '/includes/admin-header.php';
                 <div class="form-group">
                     <label class="toggle-switch">
                         <input type="checkbox" name="is_featured" value="1" <?= !empty($existing['is_featured']) ? 'checked' : '' ?> />
-                        Featured article (shows in hero section)
+                        Featured article (shows in the homepage hero, then in the highlighted stories list below it — first 3 go to the hero, next 4 to the list)
                     </label>
                 </div>
                 <div class="form-group">

@@ -425,6 +425,35 @@ a   { color:inherit; text-decoration:none; }
 .card-meta .author { font-weight:600; }
 
 /* ============================================================
+   HIGHLIGHTED STORIES  (extra featured picks, small list below hero)
+   ============================================================ */
+.highlighted-section { padding:18px 0 0; }
+.highlighted-list {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+}
+.highlighted-item {
+    display:flex; gap:10px; align-items:flex-start; text-decoration:none;
+    background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:10px; transition:box-shadow .2s ease, transform .2s ease;
+}
+.highlighted-item:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.highlighted-thumb {
+    position:relative; width:64px; height:56px; flex-shrink:0;
+    border-radius:6px; overflow:hidden; background:var(--navy);
+}
+.highlighted-thumb img { width:100%; height:100%; object-fit:cover; }
+.highlighted-thumb .thumb-logo { width:14px !important; height:14px !important; top:3px; right:3px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.highlighted-body { min-width:0; }
+.highlighted-body h4 {
+    font-size:13px; font-weight:700; line-height:1.35; color:var(--black);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    margin-bottom:3px;
+}
+.highlighted-body .article-meta { font-size:10.5px; }
+@media(max-width:900px){ .highlighted-list { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:500px){ .highlighted-list { grid-template-columns:1fr; } }
+
+/* ============================================================
    CATEGORY FILTER PILLS
    ============================================================ */
 .cat-filter-bar {
