@@ -181,7 +181,7 @@ require __DIR__ . '/includes/admin-header.php';
                 </div>
                 <div class="form-group">
                     <label>Content</label>
-                    <div id="editor" style="background:#fff;color:#1a1a2e;border-radius:10px;min-height:320px;"><?= $existing['content'] ?? '' ?></div>
+                    <div id="editor" style="background:#fff;color:#1a1a2e;border-radius:10px;min-height:320px;"><?= normalize_content_image_urls($existing['content'] ?? '') ?></div>
                 </div>
             </div>
 

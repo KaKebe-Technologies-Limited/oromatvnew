@@ -24,4 +24,4 @@ if ($url === null) {
     exit;
 }
 
-echo json_encode(['url' => BASE_PATH . '/' . ltrim($url, '/')]);
+echo json_encode(['url' => img_url($url)]);

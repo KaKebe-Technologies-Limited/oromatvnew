@@ -72,15 +72,14 @@ $pageType = 'article';
 
 // ── OG image: featured image → first img in content → logo fallback ──
 if ($article['featured_image']) {
-    $pageImage = SITE_URL . '/' . $article['featured_image'];
+    $pageImage = SITE_URL . img_url($article['featured_image']);
 } else {
     // Try to extract the first <img src="..."> from article content
     $firstImg = null;
     if (preg_match('/<img[^>]+src=["\']([^"\']+)["\'][^>]*>/i', $article['content'], $imgMatch)) {
         $src = $imgMatch[1];
-        // Make absolute if relative
         if (!preg_match('#^https?://#i', $src)) {
-            $src = SITE_URL . '/' . ltrim($src, '/');
+            $src = SITE_URL . img_url($src);
         }
         $firstImg = $src;
     }
@@ -98,6 +97,10 @@ $cleanContent = preg_replace('/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/i', '', $cle
 $cleanContent = preg_replace('/(<br\s*\/?>\s*){3,}/i', '<br />', $cleanContent);
 // Remove runs of 3+ consecutive closing+opening p tags (over-spaced paragraphs)
 $cleanContent = preg_replace('/(<\/p>\s*<p[^>]*>\s*){2,}/i', '</p><p>', $cleanContent);
+
+// Fix image paths: rewrite any /uploads/ or /oromatvnew/uploads/ etc. to use BASE_PATH
+// so images work correctly on both local and live server
+$cleanContent = normalize_content_image_urls($cleanContent);
 
 // Preload Lora font in <head> if needed
 $extraHeadHtml = '';
@@ -159,7 +162,13 @@ function render_side_feature_card(array $a): void
 
             <div class="article-cover">
                 <?php if ($article['featured_image']): ?>
-                    <img src="<?= h(BASE_PATH . '/' . $article['featured_image']) ?>" alt="<?= h($article['title']) ?>" />
+                    <?php
+                    // Normalise featured image path for both local and live
+                    $featSrc = $article['featured_image'];
+                    $featSrc = preg_replace('#^.*/uploads/#', '/uploads/', $featSrc);
+                    $featSrc = rtrim(BASE_PATH, '/') . '/' . ltrim($featSrc, '/');
+                    ?>
+                    <img src="<?= h($featSrc) ?>" alt="<?= h($article['title']) ?>" />
                 <?php else: ?>
                     <div class="thumb-fallback"></div>
                 <?php endif; ?>

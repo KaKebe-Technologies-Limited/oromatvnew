@@ -614,3 +614,36 @@ function get_categories_with_counts(): array
          ORDER BY c.display_order ASC, c.name ASC"
     )->fetchAll();
 }
+
+/**
+ * Normalise an uploaded image path so it works on both local (/oromatvnew/uploads/...)
+ * and live (oromatv.com/uploads/...) without any prefix mismatch.
+ * Returns a root-relative URL starting with BASE_PATH.
+ */
+function img_url(string $path): string
+{
+    if ($path === '') return '';
+    // Already absolute URL — leave it alone
+    if (preg_match('#^https?://#i', $path)) return $path;
+    // Strip any stale base-path prefix before /uploads/ so we always re-prefix cleanly
+    $path = preg_replace('#^.*/uploads/#', '/uploads/', $path);
+    return rtrim(BASE_PATH, '/') . '/' . ltrim($path, '/');
+}
+
+/**
+ * Rewrite every <img src="..."> inside a block of article HTML through img_url(),
+ * so inline content images always resolve on whichever environment (local/live)
+ * they're being viewed on — regardless of which environment's path got baked in
+ * when the image was originally uploaded into the editor.
+ */
+function normalize_content_image_urls(string $html): string
+{
+    if ($html === '') return '';
+    return preg_replace_callback(
+        '/<img([^>]*)\ssrc=["\']([^"\']+)["\']([^>]*)>/i',
+        function ($m) {
+            return '<img' . $m[1] . ' src="' . h(img_url($m[2])) . '"' . $m[3] . '>';
+        },
+        $html
+    );
+}

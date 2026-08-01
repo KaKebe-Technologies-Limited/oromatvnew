@@ -97,7 +97,7 @@ a   { color:inherit; text-decoration:none; }
    !important beats the generic "container img { width:100%; height:100% }"
    cover rules every thumbnail container already defines for its main photo. */
 .thumb-logo {
-    position:absolute !important; top:8px; right:8px; z-index:3;
+    position:absolute !important; top:28px; right:28px; z-index:3;
     width:28px !important; height:28px !important; border-radius:50%;
     box-shadow:0 2px 6px rgba(0,0,0,.3);
     pointer-events:none;
@@ -619,7 +619,7 @@ a   { color:inherit; text-decoration:none; }
 .article-body h2 { font-family:var(--font-headings); font-size:26px; margin:36px 0 14px; font-weight:800; }
 .article-body h3 { font-family:var(--font-headings); font-size:21px; margin:28px 0 10px; font-weight:700; }
 .article-body p  { margin-bottom:20px; }
-.article-body img { margin:26px 0; width:100%; border-radius:var(--radius-sm); box-shadow:var(--shadow-sm); }
+.article-body img { margin:26px 0; width:100%; height:auto; max-width:100%; border-radius:var(--radius-sm); box-shadow:var(--shadow-sm); }
 .article-body a   { color:var(--maroon); text-decoration:underline; text-underline-offset:3px; }
 .article-body blockquote { border-left:4px solid var(--gold); background:rgba(201,168,76,.06); padding:18px 22px; margin:28px 0; border-radius:0 var(--radius-sm) var(--radius-sm) 0; color:var(--gray); font-style:italic; font-size:18px; line-height:1.7; }
 .article-body ul,.article-body ol { margin:0 0 20px 28px; }
