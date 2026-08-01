@@ -151,6 +151,7 @@ require __DIR__ . '/includes/header.php';
                             ? BASE_PATH . '/' . $a['featured_image']
                             : placeholder_image($a['id'], 480, 300); ?>
                         <img src="<?= h($src) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
+                        <?= render_thumb_logo() ?>
                         <?php if ($a['category_name']): ?>
                             <span class="cat-badge cat-badge-sm"><?= h($a['category_name']) ?></span>
                         <?php endif; ?>

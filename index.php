@@ -84,6 +84,7 @@ $hero3 = $featured[2] ?? null;
                 ? BASE_PATH . '/' . $hero1['featured_image']
                 : placeholder_image($hero1['id'], 900, 560); ?>
             <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
+            <?= render_thumb_logo() ?>
 
             <!-- Title only — faint gradient bottom -->
             <div class="hero-overlay">
@@ -104,6 +105,7 @@ $hero3 = $featured[2] ?? null;
                     : placeholder_image($hs['id'], 480, 300); ?>
                 <div class="thumb">
                     <img src="<?= h($hsImg) ?>" alt="<?= h($hs['title']) ?>" loading="lazy" />
+                    <?= render_thumb_logo() ?>
                 </div>
                 <div class="body">
                     <?php if ($hs['category_name']): ?>
@@ -161,6 +163,7 @@ $hero3 = $featured[2] ?? null;
                         ? BASE_PATH . '/' . $a['featured_image']
                         : placeholder_image($a['id'], 480, 300); ?>
                     <img src="<?= h($aImg) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
+                    <?= render_thumb_logo() ?>
                     <?php if ($a['category_name']): ?>
                         <span class="cat-badge cat-badge-sm"><?= h($a['category_name']) ?></span>
                     <?php endif; ?>
@@ -202,6 +205,7 @@ $hero3 = $featured[2] ?? null;
                     ? BASE_PATH . '/' . $t['featured_image']
                     : placeholder_image($t['id'], 360, 220); ?>
                 <img src="<?= h($tImg) ?>" alt="<?= h($t['title']) ?>" loading="lazy" />
+                <?= render_thumb_logo() ?>
                 <span class="trending-rank <?= $i === 0 ? 'top-rank' : '' ?>"><?= $i + 1 ?></span>
             </div>
             <div class="body">

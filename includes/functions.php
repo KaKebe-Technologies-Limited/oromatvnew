@@ -583,6 +583,12 @@ function placeholder_image(int $seed, int $w = 640, int $h = 400): string
     return "https://picsum.photos/seed/{$seed}/{$w}/{$h}";
 }
 
+/** Small Oroma TV circle-logo badge, meant to sit in the corner of an article thumbnail. */
+function render_thumb_logo(): string
+{
+    return '<img src="' . h(BASE_PATH) . '/assets/img/oroma_circle_logo.svg" class="thumb-logo" alt="" loading="lazy" />';
+}
+
 /** Get all categories for admin management with article counts. */
 function get_categories_with_counts(): array
 {

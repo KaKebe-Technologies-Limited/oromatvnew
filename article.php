@@ -118,6 +118,7 @@ function render_side_article(array $a): void
             <?php else: ?>
                 <div class="thumb-fallback"></div>
             <?php endif; ?>
+            <?= render_thumb_logo() ?>
         </div>
         <div class="side-article-body">
             <?php if (!empty($a['category_name'])): ?><span class="side-cat"><?= h($a['category_name']) ?></span><?php endif; ?>
@@ -139,6 +140,7 @@ function render_side_feature_card(array $a): void
             <?php else: ?>
                 <div class="thumb-fallback"></div>
             <?php endif; ?>
+            <?= render_thumb_logo() ?>
             <?php if (!empty($a['category_name'])): ?><span class="cat-badge"><?= h($a['category_name']) ?></span><?php endif; ?>
             <span class="cap-title"><?= h($a['title']) ?></span>
         </div>
@@ -161,6 +163,7 @@ function render_side_feature_card(array $a): void
                 <?php else: ?>
                     <div class="thumb-fallback"></div>
                 <?php endif; ?>
+                <?= render_thumb_logo() ?>
                 <?php if (!empty($article['featured_image_caption'])): ?>
                     <figcaption class="cover-caption"><?= h($article['featured_image_caption']) ?></figcaption>
                 <?php endif; ?>
