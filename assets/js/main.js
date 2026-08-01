@@ -163,39 +163,45 @@
 
             drawCover(ctx, photo, 0, 0, W, PHOTO_H);
 
+            var HEADING_FONT = '"Montserrat", -apple-system, "Segoe UI", sans-serif';
+
             return loadImage(logoUrl, true).catch(function () { return null; }).then(function (logo) {
-                if (logo) {
-                    var size = 96, margin = 32;
-                    ctx.save();
-                    ctx.shadowColor = 'rgba(0,0,0,.45)';
-                    ctx.shadowBlur = 14;
-                    ctx.drawImage(logo, W - size - margin, margin, size, size);
-                    ctx.restore();
-                }
+                /* Wait for the Montserrat webfont so canvas text doesn't fall back silently. */
+                var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+                return fontsReady.then(function () {
+                    if (logo) {
+                        var size = 96, topMargin = 56, rightMargin = 56;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0,0,0,.45)';
+                        ctx.shadowBlur = 14;
+                        ctx.drawImage(logo, W - size - rightMargin, topMargin, size, size);
+                        ctx.restore();
+                    }
 
-                /* footer */
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, PHOTO_H, W, H - PHOTO_H);
-                ctx.fillStyle = '#800000';
-                ctx.fillRect(0, PHOTO_H, W, 6);
+                    /* footer */
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, PHOTO_H, W, H - PHOTO_H);
+                    ctx.fillStyle = '#800000';
+                    ctx.fillRect(0, PHOTO_H, W, 6);
 
-                var y = PHOTO_H + 78;
+                    var y = PHOTO_H + 78;
 
-                /* "CATEGORY - OROMA NEWS", black, bold, caps */
-                var catLine = ((category || '').trim() ? category.trim().toUpperCase() + ' - ' : '') + 'OROMA NEWS';
-                ctx.fillStyle = '#000000';
-                ctx.font = '700 32px Arial, Helvetica, sans-serif';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillText(catLine, PAD, y);
+                    /* "CATEGORY - OROMA NEWS", black, bold, caps */
+                    var catLine = ((category || '').trim() ? category.trim().toUpperCase() + ' - ' : '') + 'OROMA NEWS';
+                    ctx.fillStyle = '#000000';
+                    ctx.font = '700 32px ' + HEADING_FONT;
+                    ctx.textBaseline = 'alphabetic';
+                    ctx.fillText(catLine, PAD, y);
 
-                y += 56;
+                    y += 56;
 
-                /* title */
-                ctx.fillStyle = '#111111';
-                ctx.font = '800 46px Georgia, "Playfair Display", serif';
-                wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 4);
+                    /* title, in the site's maroon */
+                    ctx.fillStyle = '#800000';
+                    ctx.font = '800 46px ' + HEADING_FONT;
+                    wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 4);
 
-                return canvas;
+                    return canvas;
+                });
             });
         });
     }
