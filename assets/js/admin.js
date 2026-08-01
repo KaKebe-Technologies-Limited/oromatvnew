@@ -74,15 +74,51 @@
             });
         }
 
-        function imageHandler() {
-            // Ask if inserting one or two side-by-side images
-            var mode = confirm('Insert TWO images side by side?\n\nOK = Two images  |  Cancel = Single image');
+        var imgChoiceOverlay = null;
+        function getImgChoiceOverlay() {
+            if (imgChoiceOverlay) return imgChoiceOverlay;
 
-            if (!mode) {
-                uploadSingle();
-            } else {
-                uploadDouble();
-            }
+            var overlay = document.createElement('div');
+            overlay.className = 'img-choice-overlay';
+            overlay.innerHTML =
+                '<div class="img-choice-modal">' +
+                    '<h3>Insert Image</h3>' +
+                    '<p>How many images do you want to insert?</p>' +
+                    '<div class="img-choice-actions">' +
+                        '<button type="button" class="img-choice-btn" data-choice="single"><i class="fas fa-image"></i> Single image</button>' +
+                        '<button type="button" class="img-choice-btn" data-choice="double"><i class="fas fa-images"></i> Two images, side by side</button>' +
+                    '</div>' +
+                    '<button type="button" class="img-choice-cancel">Cancel</button>' +
+                '</div>';
+            document.body.appendChild(overlay);
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay || e.target.classList.contains('img-choice-cancel')) {
+                    closeImgChoice();
+                    return;
+                }
+                var btn = e.target.closest('.img-choice-btn');
+                if (!btn) return;
+                closeImgChoice();
+                // Fire the upload from inside this click handler, synchronously,
+                // so the file-picker dialog still counts as user-initiated.
+                if (btn.dataset.choice === 'double') {
+                    uploadDouble();
+                } else {
+                    uploadSingle();
+                }
+            });
+
+            imgChoiceOverlay = overlay;
+            return overlay;
+        }
+
+        function closeImgChoice() {
+            if (imgChoiceOverlay) imgChoiceOverlay.classList.remove('is-open');
+        }
+
+        function imageHandler() {
+            getImgChoiceOverlay().classList.add('is-open');
         }
 
         function uploadSingle() {
