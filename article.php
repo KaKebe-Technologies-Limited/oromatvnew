@@ -31,7 +31,10 @@ if (!$canView) {
 }
 
 if ($article['status'] === 'published') {
-    db()->prepare('UPDATE articles SET views = views + 1 WHERE id = ?')->execute([$article['id']]);
+    $showViews = get_setting('show_article_views', '1');
+    if ($showViews !== '0') {
+        db()->prepare('UPDATE articles SET views = views + 1 WHERE id = ?')->execute([$article['id']]);
+    }
 }
 
 $tagStmt = db()->prepare(
@@ -67,6 +70,14 @@ $pageDescription = $article['meta_description'] ?: ($article['excerpt'] ?: make_
 $pageImage = $article['featured_image'] ? (SITE_URL . '/' . $article['featured_image']) : (SITE_URL . '/img/logo.png');
 $pageCanonical = SITE_URL . '/article.php?slug=' . urlencode($article['slug']);
 $pageType = 'article';
+$showViews   = get_setting('show_article_views', '1') !== '0';
+$articleFont = $article['body_font'] ?? get_setting('article_font', 'inter');
+
+// Preload Lora font in <head> if needed
+$extraHeadHtml = '';
+if ($articleFont === 'lora') {
+    $extraHeadHtml = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" />';
+}
 
 require __DIR__ . '/includes/header.php';
 
@@ -142,12 +153,16 @@ function render_side_feature_card(array $a): void
                 </button>
             </div>
             <div class="article-meta-line article-views-line">
-                <i class="fas fa-eye"></i> <?= (int) $article['views'] ?> Views
+                <?php if ($showViews): ?>
+                    <i class="fas fa-eye"></i> <?= (int) $article['views'] ?> Views
+                    <span class="sep">&middot;</span>
+                <?php endif; ?>
+                <a href="#comments"><i class="fas fa-comment"></i> <?= (int) $commentCount ?> Comment<?= $commentCount !== 1 ? 's' : '' ?></a>
                 <span class="sep">&middot;</span>
-                <a href="#comments"><i class="fas fa-comment"></i> <?= (int) $commentCount ?> Comments</a>
+                <span><i class="fas fa-clock"></i> <?= reading_time($article['content']) ?> min read</span>
             </div>
 
-            <div class="article-body"><?= $article['content'] ?></div>
+            <div class="article-body article-font-<?= h($articleFont) ?>"><?= $article['content'] ?></div>
 
             <?php if ($tags): ?>
                 <div class="article-tags">

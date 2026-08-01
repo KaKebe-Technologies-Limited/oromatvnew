@@ -75,44 +75,81 @@
         }
 
         function imageHandler() {
+            // Ask if inserting one or two side-by-side images
+            var mode = confirm('Insert TWO images side by side?\n\nOK = Two images  |  Cancel = Single image');
+
+            if (!mode) {
+                uploadSingle();
+            } else {
+                uploadDouble();
+            }
+        }
+
+        function uploadSingle() {
             var input = document.createElement('input');
             input.setAttribute('type', 'file');
             input.setAttribute('accept', 'image/*');
             input.click();
-
             input.onchange = function () {
                 var file = input.files[0];
                 if (!file) return;
-                var formData = new FormData();
-                formData.append('image', file);
-                formData.append('csrf_token', window.OROMA_CSRF || '');
-
-                fetch(window.OROMA_UPLOAD_URL, { method: 'POST', body: formData })
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) {
-                        if (data.url) {
-                            var range = quill.getSelection(true);
-                            quill.insertEmbed(range.index, 'image', data.url, 'user');
-                            quill.insertText(range.index + 1, '\n', 'user');
-
-                            var caption = window.prompt('Add a caption for this image (optional):', '');
-                            caption = (caption || '').trim();
-                            var cursor = range.index + 2;
-
-                            if (caption) {
-                                quill.insertText(cursor, caption, { italic: true }, 'user');
-                                cursor += caption.length;
-                                quill.insertText(cursor, '\n', 'user');
-                                cursor += 1;
-                            }
-
-                            quill.setSelection(cursor);
-                        } else {
-                            alert(data.error || 'Image upload failed.');
-                        }
-                    })
-                    .catch(function () { alert('Image upload failed.'); });
+                doUpload(file, function(url) {
+                    var range = quill.getSelection(true);
+                    quill.insertEmbed(range.index, 'image', url, 'user');
+                    quill.insertText(range.index + 1, '\n', 'user');
+                    quill.setSelection(range.index + 2);
+                });
             };
+        }
+
+        function uploadDouble() {
+            // Pick first image
+            var input1 = document.createElement('input');
+            input1.setAttribute('type', 'file');
+            input1.setAttribute('accept', 'image/*');
+            input1.click();
+            input1.onchange = function () {
+                var file1 = input1.files[0];
+                if (!file1) return;
+                // Pick second image
+                var input2 = document.createElement('input');
+                input2.setAttribute('type', 'file');
+                input2.setAttribute('accept', 'image/*');
+                input2.click();
+                input2.onchange = function () {
+                    var file2 = input2.files[0];
+                    if (!file2) return;
+                    // Upload both then insert side-by-side HTML
+                    doUpload(file1, function(url1) {
+                        doUpload(file2, function(url2) {
+                            var range = quill.getSelection(true);
+                            var html = '<div class="img-row">'
+                                + '<img src="' + url1 + '" alt="" />'
+                                + '<img src="' + url2 + '" alt="" />'
+                                + '</div>';
+                            quill.clipboard.dangerouslyPasteHTML(range.index, html, 'user');
+                            quill.insertText(range.index + 1, '\n', 'user');
+                            quill.setSelection(range.index + 2);
+                        });
+                    });
+                };
+            };
+        }
+
+        function doUpload(file, callback) {
+            var formData = new FormData();
+            formData.append('image', file);
+            formData.append('csrf_token', window.OROMA_CSRF || '');
+            fetch(window.OROMA_UPLOAD_URL, { method: 'POST', body: formData })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.url) {
+                        callback(data.url);
+                    } else {
+                        alert(data.error || 'Image upload failed.');
+                    }
+                })
+                .catch(function() { alert('Image upload failed.'); });
         }
     }
 

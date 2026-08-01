@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = in_array($_POST['status'] ?? '', ['draft', 'published'], true) ? $_POST['status'] : 'draft';
         $isFeatured  = isset($_POST['is_featured'])  ? 1 : 0;
         $isBreaking  = isset($_POST['is_breaking'])  ? 1 : 0;
+        $bodyFont    = in_array($_POST['body_font'] ?? '', ['inter','lora'], true) ? $_POST['body_font'] : 'inter';
 
         $featuredImage = $existing['featured_image'] ?? null;
         if (!empty($_FILES['featured_image_file']) && $_FILES['featured_image_file']['error'] === UPLOAD_ERR_OK) {
@@ -74,19 +75,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing) {
                 $stmt = db()->prepare(
                     'UPDATE articles SET title=?, slug=?, excerpt=?, content=?, featured_image=?, featured_image_caption=?, category_id=?,
-                     meta_title=?, meta_description=?, status=?, is_featured=?, is_breaking=? WHERE id=?'
+                     meta_title=?, meta_description=?, status=?, is_featured=?, is_breaking=?, body_font=? WHERE id=?'
                 );
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $id]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, $id]);
                 $articleId = $id;
             } else {
                 $stmt = db()->prepare(
                     'INSERT INTO articles (title, slug, excerpt, content, featured_image, featured_image_caption, category_id, author_id,
-                     meta_title, meta_description, status, is_featured, is_breaking)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                     meta_title, meta_description, status, is_featured, is_breaking, body_font)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 );
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId, $authorId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont]);
                 $articleId = (int) db()->lastInsertId();
             }
 
@@ -119,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'status' => $_POST['status'] ?? 'draft',
         'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
         'is_breaking' => isset($_POST['is_breaking']) ? 1 : 0,
+        'body_font'   => $_POST['body_font'] ?? 'inter',
         'featured_image_caption' => $_POST['featured_image_caption'] ?? '',
         'id' => $id,
     ]);
@@ -217,6 +219,21 @@ require __DIR__ . '/includes/admin-header.php';
                         <input type="checkbox" name="is_breaking" value="1" <?= !empty($existing['is_breaking']) ? 'checked' : '' ?> />
                         Breaking news (shows in ticker)
                     </label>
+                </div>
+                <div class="form-group" style="margin-top:4px;">
+                    <label for="body_font" style="font-weight:600;font-size:13px;">Article Body Font</label>
+                    <select class="form-control" id="body_font" name="body_font">
+                        <option value="inter"      <?= ($existing['body_font'] ?? 'inter') === 'inter'      ? 'selected' : '' ?>>
+                            Inter — Clean &amp; modern sans-serif
+                        </option>
+                        <option value="lora"       <?= ($existing['body_font'] ?? '') === 'lora'       ? 'selected' : '' ?>>
+                            Lora — Elegant serif, great for long reads
+                        </option>
+                    </select>
+                    <div class="form-hint">
+                        <strong>Inter</strong> — neutral, web-optimised. Best for news/breaking stories.<br>
+                        <strong>Lora</strong> — warm serif with calligraphic roots. Best for feature articles &amp; opinion.
+                    </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;">
                     <button type="submit" name="action" value="save" class="btn btn-primary btn-block"><i class="fas fa-check"></i> Save</button>

@@ -71,3 +71,8 @@ ON DUPLICATE KEY UPDATE title = VALUES(title);
 SELECT 'Migration complete' AS status;
 SELECT COUNT(*) AS categories FROM categories;
 SELECT COUNT(*) AS previous_shows FROM previous_shows;
+
+-- Article body font & settings
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS body_font VARCHAR(20) DEFAULT 'inter';
+INSERT INTO settings (`key`, `value`) VALUES ('show_article_views','1') ON DUPLICATE KEY UPDATE `value`=`value`;
+INSERT INTO settings (`key`, `value`) VALUES ('article_font','inter') ON DUPLICATE KEY UPDATE `value`=`value`;
