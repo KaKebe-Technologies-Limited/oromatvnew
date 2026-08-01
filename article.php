@@ -189,6 +189,14 @@ function render_side_feature_card(array $a): void
                 <button type="button" class="copy-link-btn js-copy-link" data-url="<?= h($pageCanonical) ?>" title="Copy link to this article">
                     <i class="fas fa-link"></i> <span class="copy-text">Copy link</span>
                 </button>
+                <button type="button" class="copy-link-btn js-snap-btn"
+                        data-image="<?= h($pageImage) ?>"
+                        data-logo="<?= h(BASE_PATH) ?>/assets/img/oroma_circle_logo.svg"
+                        data-title="<?= h($article['title']) ?>"
+                        data-category="<?= h($article['category_name'] ?? '') ?>"
+                        title="Save a shareable snapshot of this article">
+                    <i class="fas fa-camera"></i> <span class="snap-text">Snap</span>
+                </button>
             </div>
             <div class="article-meta-line article-views-line">
                 <?php if ($showViews): ?>
