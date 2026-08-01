@@ -33,7 +33,7 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
     <link rel="icon" href="<?= h(BASE_PATH) ?>/img/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
     <?= $extraHeadHtml ?? '' ?>
@@ -57,6 +57,7 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
             <a href="<?= h(BASE_PATH) ?>/news.php"   <?= ($activeNav ?? '') === 'news'  ? 'class="active"' : '' ?>>News</a>
             <a href="<?= h(BASE_PATH) ?>/watch.php"  <?= ($activeNav ?? '') === 'watch' ? 'class="active"' : '' ?>>Watch Live</a>
             <a href="<?= h(BASE_PATH) ?>/previous-shows.php" <?= ($activeNav ?? '') === 'shows' ? 'class="active"' : '' ?>>Previous Shows</a>
+            <a href="<?= h(BASE_PATH) ?>/contact.php" <?= ($activeNav ?? '') === 'contact' ? 'class="active"' : '' ?>>Contact</a>
             <?php foreach (array_slice($navCategories, 0, 4) as $nc): ?>
                 <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($nc['slug']) ?>"
                    <?= ($activeNav ?? '') === $nc['slug'] ? 'class="active"' : '' ?>>

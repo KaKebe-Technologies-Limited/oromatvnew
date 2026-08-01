@@ -61,11 +61,11 @@
             <div class="footer-col">
                 <h4>About</h4>
                 <nav>
-                    <a href="#">About Oroma TV</a>
-                    <a href="#">Contact Us</a>
+                    <a href="<?= h(BASE_PATH) ?>/contact.php">About Oroma TV</a>
+                    <a href="<?= h(BASE_PATH) ?>/contact.php">Contact Us</a>
                     <a href="#">Privacy Policy</a>
                     <a href="#">Terms of Use</a>
-                    <a href="#">Advertise</a>
+                    <a href="<?= h(BASE_PATH) ?>/contact.php">Advertise</a>
                 </nav>
             </div>
         </div>

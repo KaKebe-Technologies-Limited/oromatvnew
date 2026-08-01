@@ -22,7 +22,7 @@ function admin_nav_class(string $key, string $active): string
     <title><?= h($pageTitle) ?> · Admin · <?= h(SITE_NAME) ?></title>
     <link rel="icon" href="<?= h(BASE_PATH) ?>/img/logo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/admin.css" />
 </head>
 <body>
