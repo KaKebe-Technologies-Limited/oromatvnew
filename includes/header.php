@@ -54,7 +54,9 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
         <nav class="site-nav" id="siteNav" aria-label="Main navigation">
             <a href="<?= h(BASE_PATH) ?>/index.php"  <?= ($activeNav ?? '') === 'home'  ? 'class="active"' : '' ?>>Home</a>
             <a href="<?= h(BASE_PATH) ?>/news.php"   <?= ($activeNav ?? '') === 'news'  ? 'class="active"' : '' ?>>News</a>
-            <?php foreach (array_slice($navCategories, 0, 6) as $nc): ?>
+            <a href="<?= h(BASE_PATH) ?>/watch.php"  <?= ($activeNav ?? '') === 'watch' ? 'class="active"' : '' ?>>Watch Live</a>
+            <a href="<?= h(BASE_PATH) ?>/previous-shows.php" <?= ($activeNav ?? '') === 'shows' ? 'class="active"' : '' ?>>Previous Shows</a>
+            <?php foreach (array_slice($navCategories, 0, 4) as $nc): ?>
                 <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($nc['slug']) ?>"
                    <?= ($activeNav ?? '') === $nc['slug'] ? 'class="active"' : '' ?>>
                     <?= h($nc['name']) ?>
