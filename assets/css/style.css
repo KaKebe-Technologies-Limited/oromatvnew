@@ -668,10 +668,13 @@ a   { color:inherit; text-decoration:none; }
 .side-feature-card .thumb { position:relative; aspect-ratio:16/10; overflow:hidden; background:var(--navy); }
 .side-feature-card .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
 .side-feature-card:hover .thumb img { transform:scale(1.05); }
-.side-feature-card .thumb::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(26,26,26,0) 35%,rgba(26,26,26,.85) 100%); }
 .side-feature-card .cat-badge { position:absolute; top:8px; left:8px; z-index:2; }
-.side-feature-card .cap-title { position:absolute; left:10px; right:10px; bottom:9px; z-index:2; color:#fff; font-weight:700; font-size:13.5px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.side-feature-card .cap-meta { padding:7px 2px 0; font-size:11.5px; color:var(--gray); }
+.side-feature-card .cap-title {
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    color:#fff; font-weight:700; font-size:13.5px; line-height:1.4;
+    padding:10px 12px 8px; background:rgba(26,26,26,.85);
+}
+.side-feature-card .cap-meta { padding:7px 12px 10px; font-size:11.5px; color:rgba(255,255,255,.6); background:rgba(26,26,26,.85); }
 
 /* ============================================================
    COMMENTS

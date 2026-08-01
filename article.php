@@ -132,7 +132,7 @@ function render_side_article(array $a): void
     <?php
 }
 
-/** Large sidebar feature card: image with category badge + title overlaid. */
+/** Large sidebar feature card: image, with title + meta in a faded dark panel below it. */
 function render_side_feature_card(array $a): void
 {
     ?>
@@ -145,8 +145,8 @@ function render_side_feature_card(array $a): void
             <?php endif; ?>
             <?= render_thumb_logo() ?>
             <?php if (!empty($a['category_name'])): ?><span class="cat-badge"><?= h($a['category_name']) ?></span><?php endif; ?>
-            <span class="cap-title"><?= h($a['title']) ?></span>
         </div>
+        <span class="cap-title"><?= h($a['title']) ?></span>
         <div class="cap-meta"><?= h(time_ago($a['created_at'])) ?> <?php if (!empty($a['author_name'])): ?>/ <?= h($a['author_name']) ?><?php endif; ?></div>
     </a>
     <?php
