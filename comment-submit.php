@@ -46,9 +46,9 @@ if ($errors) {
 }
 
 $stmt = db()->prepare(
-    "INSERT INTO comments (article_id, name, email, comment, status) VALUES (?, ?, ?, ?, 'approved')"
+    "INSERT INTO comments (article_id, name, email, comment, status, created_at) VALUES (?, ?, ?, ?, 'approved', ?)"
 );
-$stmt->execute([$article['id'], $name, $email ?: null, $comment]);
+$stmt->execute([$article['id'], $name, $email ?: null, $comment, date('Y-m-d H:i:s')]);
 
 flash('success', 'Thanks! Your comment is now live.');
 redirect($backUrl);
