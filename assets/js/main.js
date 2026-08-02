@@ -178,7 +178,7 @@
     }
 
     function buildSnapCard(imageUrl, logoUrl, title, category, dateStr) {
-        var W = 1080, H = 1350, PHOTO_H = 950, PAD = 60;
+        var W = 1080, H = 1420, PHOTO_H = 950, PAD = 60;
 
         return loadImage(imageUrl, true).then(function (photo) {
             var canvas = document.createElement('canvas');
@@ -222,7 +222,7 @@
                     /* title, in the site's maroon */
                     ctx.fillStyle = '#800000';
                     ctx.font = '800 46px ' + HEADING_FONT;
-                    y = wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 4);
+                    y = wrapText(ctx, title || '', PAD, y, W - PAD * 2, 56, 3);
 
                     /* publish date — important context for anyone sharing the snap */
                     if (dateStr) {
