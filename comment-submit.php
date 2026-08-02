@@ -46,9 +46,9 @@ if ($errors) {
 }
 
 $stmt = db()->prepare(
-    "INSERT INTO comments (article_id, name, email, comment, status) VALUES (?, ?, ?, ?, 'pending')"
+    "INSERT INTO comments (article_id, name, email, comment, status) VALUES (?, ?, ?, ?, 'approved')"
 );
 $stmt->execute([$article['id'], $name, $email ?: null, $comment]);
 
-flash('success', 'Thanks! Your comment has been submitted and will appear once approved.');
+flash('success', 'Thanks! Your comment is now live.');
 redirect($backUrl);

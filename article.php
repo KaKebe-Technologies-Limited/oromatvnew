@@ -288,7 +288,7 @@ function render_side_feature_card(array $a): void
                     </div>
                     <textarea class="form-control" name="comment" rows="4" placeholder="Join the conversation…" maxlength="2000" required></textarea>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Post Comment</button>
-                    <p class="form-hint">Comments are reviewed before they appear publicly.</p>
+                    <p class="form-hint">Comments appear immediately after posting.</p>
                 </form>
             </div>
         </div>
