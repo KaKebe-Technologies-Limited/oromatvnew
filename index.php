@@ -36,8 +36,18 @@ if ($filterCatSlug) {
     }
 }
 
-$latestArticles = get_latest_articles(8, $filterCatId);
+// Articles already shown in the hero/highlighted strip should never repeat below
+$shownIds = array_map('intval', array_column($featured, 'id'));
+
+$latestArticles = get_latest_articles(8, $filterCatId, 0, $filterCatId ? [] : $shownIds);
 $trending       = get_trending_articles(6);
+
+// A compact, image-light list of further headlines — keeps the homepage from
+// being wall-to-wall card grids, and never repeats what's already on screen.
+$moreHeadlines = get_latest_articles(
+    6, null, 0,
+    array_unique(array_merge($shownIds, array_column($latestArticles, 'id')))
+);
 
 // Streams
 $youtubeStreams = db()->query(
@@ -82,14 +92,16 @@ $highlighted = array_slice($featured, 3, 4);
         <?php /* Main hero card */ ?>
         <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hero1['slug']) ?>"
            class="hero-main reveal">
-            <?php $img1 = article_thumb_src($hero1['featured_image'], $hero1['id'], 900, 560); ?>
-            <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
-            <?= render_thumb_logo() ?>
-            <div class="hero-overlay">
-                <?php if ($hero1['category_name']): ?>
-                    <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
-                <?php endif; ?>
-                <h2><?= h($hero1['title']) ?></h2>
+            <div class="hero-media">
+                <?php $img1 = article_thumb_src($hero1['featured_image'], $hero1['id'], 900, 560); ?>
+                <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
+                <?= render_thumb_logo() ?>
+                <div class="hero-overlay">
+                    <?php if ($hero1['category_name']): ?>
+                        <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
+                    <?php endif; ?>
+                    <h2><?= h($hero1['title']) ?></h2>
+                </div>
             </div>
         </a>
 
@@ -204,6 +216,31 @@ $highlighted = array_slice($featured, 3, 4);
         </a>
     </div>
 </section>
+
+<?php /* ── MORE HEADLINES (compact list, not cards — small thumb + title rows) ── */ ?>
+<?php if ($moreHeadlines): ?>
+<section class="container section" style="padding-top:0;">
+    <div class="section-head reveal">
+        <h2>More <span>Headlines</span></h2>
+        <a href="<?= h(BASE_PATH) ?>/news.php" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="headline-list">
+        <?php foreach ($moreHeadlines as $m): ?>
+            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($m['slug']) ?>" class="headline-row reveal">
+                <div class="headline-thumb">
+                    <?php $mImg = article_thumb_src($m['featured_image'], $m['id'], 160, 160); ?>
+                    <img src="<?= h($mImg) ?>" alt="<?= h($m['title']) ?>" loading="lazy" />
+                </div>
+                <div class="headline-body">
+                    <?php if ($m['category_name']): ?><span class="side-cat"><?= h($m['category_name']) ?></span><?php endif; ?>
+                    <h4><?= h($m['title']) ?></h4>
+                    <div class="article-meta"><span><?= h(time_ago($m['created_at'])) ?></span></div>
+                </div>
+            </a>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
 
 <?php /* ── TRENDING NOW ── */ ?>
 <?php if ($trending): ?>

@@ -97,8 +97,9 @@ a   { color:inherit; text-decoration:none; }
    !important beats the generic "container img { width:100%; height:100% }"
    cover rules every thumbnail container already defines for its main photo. */
 .thumb-logo {
-    position:absolute !important; top:28px; right:28px; z-index:3;
+    position:absolute !important; top:14px; left:14px; z-index:3;
     width:28px !important; height:28px !important; border-radius:50%;
+    background:rgba(255,255,255,.82); padding:4px; box-sizing:border-box;
     box-shadow:0 2px 6px rgba(0,0,0,.3);
     pointer-events:none;
     object-fit:contain !important;
@@ -330,9 +331,12 @@ a   { color:inherit; text-decoration:none; }
 
 /* Main hero card */
 .hero-main {
+    display:block; text-decoration:none;
+}
+.hero-media {
     position:relative; overflow:hidden;
     border-radius:var(--radius-md);
-    background:#1a1a1a; display:block; text-decoration:none;
+    background:#1a1a1a;
 }
 .hero-main img {
     width:100%; height:460px; object-fit:cover;
@@ -356,7 +360,7 @@ a   { color:inherit; text-decoration:none; }
 }
 .hero-overlay .cat-badge {
     display: inline-block;
-    margin-bottom: 5px;
+    margin-bottom: 12px;
     font-size: 10.5px;
     background: var(--maroon);
     color: #fff;
@@ -414,6 +418,11 @@ a   { color:inherit; text-decoration:none; }
     .hero-overlay { padding:12px 14px 14px; }
     .hero-overlay h1 { font-size:16px; }
     .hero-side { flex-direction:column; }
+
+    /* Featured image loses its rounded corners on mobile and sits inset
+       with breathing room instead of running edge-to-edge. */
+    .hero-main { padding:10px; background:var(--card-bg); border:1px solid var(--border); border-radius:var(--radius-md); }
+    .hero-media { border-radius:0; }
 }
 
 /* card-meta (shared) */
@@ -442,7 +451,7 @@ a   { color:inherit; text-decoration:none; }
     border-radius:6px; overflow:hidden; background:var(--navy);
 }
 .highlighted-thumb img { width:100%; height:100%; object-fit:cover; }
-.highlighted-thumb .thumb-logo { width:14px !important; height:14px !important; top:3px; right:3px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.highlighted-thumb .thumb-logo { width:14px !important; height:14px !important; top:3px; left:3px; padding:2px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
 .highlighted-body { min-width:0; }
 .highlighted-body h4 {
     font-size:13px; font-weight:700; line-height:1.35; color:var(--black);
@@ -522,7 +531,7 @@ a   { color:inherit; text-decoration:none; }
 }
 .news-card .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .45s ease; }
 .news-card:hover .thumb img { transform:scale(1.07); }
-.news-card .thumb .cat-badge { position:absolute; top:10px; left:10px; z-index:2; }
+.news-card .thumb .cat-badge { position:absolute; top:10px; right:10px; z-index:2; }
 .news-card .content { padding:16px 18px 18px; display:flex; flex-direction:column; gap:8px; flex:1; }
 @media(max-width:780px){
     .news-card { padding-top:10px; }
@@ -538,6 +547,35 @@ a   { color:inherit; text-decoration:none; }
 .news-card .excerpt {
     font-size:13px; color:var(--gray); line-height:1.55; flex:1;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+/* ============================================================
+   MORE HEADLINES  (plain list rows — small thumb + title, no card chrome,
+   deliberately different from the card grids used elsewhere on the page)
+   ============================================================ */
+.headline-list {
+    display:grid; grid-template-columns:1fr 1fr; gap:0 32px;
+}
+.headline-row {
+    display:flex; gap:14px; align-items:center; text-decoration:none;
+    padding:14px 0; border-bottom:1px solid var(--border);
+}
+.headline-row:nth-last-child(-n+2) { border-bottom:none; }
+.headline-thumb {
+    width:64px; height:64px; flex-shrink:0; border-radius:8px; overflow:hidden; background:var(--navy);
+}
+.headline-thumb img { width:100%; height:100%; object-fit:cover; }
+.headline-body { min-width:0; }
+.headline-body h4 {
+    font-size:14px; font-weight:700; line-height:1.35; color:var(--black);
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    margin-bottom:4px; transition:color .2s;
+}
+.headline-row:hover h4 { color:var(--maroon); }
+@media(max-width:700px){
+    .headline-list { grid-template-columns:1fr; }
+    .headline-row:nth-last-child(-n+2) { border-bottom:1px solid var(--border); }
+    .headline-row:last-child { border-bottom:none; }
 }
 
 /* ============================================================
@@ -561,6 +599,7 @@ a   { color:inherit; text-decoration:none; }
 }
 .trending-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); }
 .trending-card .thumb { position:relative; aspect-ratio:16/10; overflow:hidden; background:var(--navy); }
+.trending-card .thumb .thumb-logo { left:auto; right:8px; top:8px; }
 .trending-card .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .45s; }
 .trending-card:hover .thumb img { transform:scale(1.07); }
 .trending-card .body { padding:12px 14px 16px; display:flex; flex-direction:column; gap:6px; }
@@ -719,7 +758,7 @@ a   { color:inherit; text-decoration:none; }
 .article-cover img { width:100%; max-height:500px; object-fit:cover; display:block; }
 .article-cover .thumb-fallback { aspect-ratio:16/9; background:var(--navy); }
 
-.article-cover .thumb-logo { width:65px !important; height:65px !important; top:15px; right:15px; }
+.article-cover .thumb-logo { width:65px !important; height:65px !important; top:15px; left:15px; padding:8px; }
 
 .cover-caption { background:var(--light-gray); padding:10px 16px; font-size:12.5px; font-style:italic; color:var(--gray); border-top:1px solid var(--border); }
 
@@ -778,7 +817,7 @@ a   { color:inherit; text-decoration:none; }
 .side-article:hover { opacity:.76; }
 .side-thumb { position:relative; width:72px; height:60px; flex-shrink:0; overflow:hidden; background:var(--navy); border-radius:6px; }
 .side-thumb img { width:100%; height:100%; object-fit:cover; }
-.side-thumb .thumb-logo { width:14px !important; height:14px !important; top:3px; right:3px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.side-thumb .thumb-logo { width:14px !important; height:14px !important; top:3px; left:3px; padding:2px; box-shadow:0 1px 3px rgba(0,0,0,.35); }
 .side-cat { display:block; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--maroon); margin-bottom:4px; }
 .side-article-body h4 { font-size:13px; font-weight:600; line-height:1.38; color:var(--black); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:4px; }
 .side-article-body .article-meta { font-size:11px; }
@@ -791,7 +830,7 @@ a   { color:inherit; text-decoration:none; }
 .side-feature-card .thumb { position:relative; aspect-ratio:16/10; overflow:hidden; background:var(--navy); }
 .side-feature-card .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
 .side-feature-card:hover .thumb img { transform:scale(1.05); }
-.side-feature-card .cat-badge { position:absolute; top:8px; left:8px; z-index:2; }
+.side-feature-card .cat-badge { position:absolute; top:8px; right:8px; z-index:2; }
 .side-feature-card .cap-title {
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     color:#fff; font-weight:700; font-size:13.5px; line-height:1.4;

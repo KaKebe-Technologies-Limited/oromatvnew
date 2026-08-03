@@ -538,9 +538,16 @@ function get_featured_articles(int $limit = 5): array
     return $stmt->fetchAll();
 }
 
-/** Latest published articles with optional category filter. */
-function get_latest_articles(int $limit = 8, ?int $categoryId = null, int $offset = 0): array
+/** Latest published articles with optional category filter and optional IDs to exclude. */
+function get_latest_articles(int $limit = 8, ?int $categoryId = null, int $offset = 0, array $excludeIds = []): array
 {
+    $excludeSql = '';
+    $excludeParams = [];
+    if ($excludeIds) {
+        $excludeSql = ' AND a.id NOT IN (' . implode(',', array_fill(0, count($excludeIds), '?')) . ')';
+        $excludeParams = array_map('intval', $excludeIds);
+    }
+
     if ($categoryId) {
         $stmt = db()->prepare(
             "SELECT a.*, c.name AS category_name, c.slug AS category_slug,
@@ -548,10 +555,10 @@ function get_latest_articles(int $limit = 8, ?int $categoryId = null, int $offse
              FROM articles a
              LEFT JOIN categories c ON c.id = a.category_id
              LEFT JOIN users u ON u.id = a.author_id
-             WHERE a.status = 'published' AND a.category_id = ?
+             WHERE a.status = 'published' AND a.category_id = ?$excludeSql
              ORDER BY a.created_at DESC LIMIT ? OFFSET ?"
         );
-        $stmt->execute([$categoryId, $limit, $offset]);
+        $stmt->execute([$categoryId, ...$excludeParams, $limit, $offset]);
     } else {
         $stmt = db()->prepare(
             "SELECT a.*, c.name AS category_name, c.slug AS category_slug,
@@ -559,10 +566,10 @@ function get_latest_articles(int $limit = 8, ?int $categoryId = null, int $offse
              FROM articles a
              LEFT JOIN categories c ON c.id = a.category_id
              LEFT JOIN users u ON u.id = a.author_id
-             WHERE a.status = 'published'
+             WHERE a.status = 'published'$excludeSql
              ORDER BY a.created_at DESC LIMIT ? OFFSET ?"
         );
-        $stmt->execute([$limit, $offset]);
+        $stmt->execute([...$excludeParams, $limit, $offset]);
     }
     return $stmt->fetchAll();
 }
