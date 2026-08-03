@@ -9,10 +9,10 @@ $pageTitle  = SITE_NAME . ' · Live Stream & News';
 $categories    = get_active_categories();
 $breakingNews  = get_breaking_news(12);
 
-// 3 for the hero (main + 2 side cards) + up to 4 more for the "Highlighted Stories" strip below it
-$featured = get_featured_articles(7);
-// Fallback: pad with latest published so the hero and the highlights strip are never left empty
-if (count($featured) < 7) {
+// 3 for the center slideshow + 2 for the side cards + up to 4 more for the left headline list
+$featured = get_featured_articles(9);
+// Fallback: pad with latest published so the hero is never left empty
+if (count($featured) < 9) {
     $featIds  = array_column($featured, 'id');
     $placeholders = count($featIds) ? implode(',', array_fill(0, count($featIds), '?')) : '0';
     $stmt = db()->prepare(
@@ -21,7 +21,7 @@ if (count($featured) < 7) {
          LEFT JOIN categories c ON c.id = a.category_id
          LEFT JOIN users u ON u.id = a.author_id
          WHERE a.status='published' AND a.id NOT IN ($placeholders)
-         ORDER BY a.created_at DESC LIMIT " . (7 - count($featured))
+         ORDER BY a.created_at DESC LIMIT " . (9 - count($featured))
     );
     $stmt->execute($featIds ?: []);
     $featured = array_merge($featured, $stmt->fetchAll());
@@ -80,15 +80,15 @@ require __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <?php /* ── HERO SECTION ──
-   3-column, CNN-style: a quick-read list on the left, the single main
-   story centered as the sole focal point, and compact side cards on
-   the right. */
-$hero1 = $featured[0] ?? null;
-$hero2 = $featured[1] ?? null;
-$hero3 = $featured[2] ?? null;
-$heroLeftList = array_slice($featured, 3, 4);
+   3-column, CNN-style: a quick-read list on the left, the center a slideshow
+   of the top stories (the sole focal point), and compact side cards on the
+   right. All three columns draw from the same $featured set so nothing repeats. */
+$heroSlides   = array_slice($featured, 0, 3);
+$hero2        = $featured[3] ?? null;
+$hero3        = $featured[4] ?? null;
+$heroLeftList = array_slice($featured, 5, 4);
 ?>
-<?php if ($hero1): ?>
+<?php if ($heroSlides): ?>
 <section class="hero-section container-wide">
     <div class="hero-grid">
 
@@ -114,21 +114,35 @@ $heroLeftList = array_slice($featured, 3, 4);
         </div>
         <?php endif; ?>
 
-        <?php /* Main hero card — the single focal story, centered */ ?>
-        <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hero1['slug']) ?>"
-           class="hero-main reveal">
-            <div class="hero-media">
-                <?php $img1 = article_thumb_src($hero1['featured_image'], $hero1['id'], 900, 560); ?>
-                <img src="<?= h($img1) ?>" alt="<?= h($hero1['title']) ?>" loading="eager" />
-                <?= render_thumb_logo() ?>
-                <div class="hero-overlay">
-                    <?php if ($hero1['category_name']): ?>
-                        <span class="cat-badge"><?= h($hero1['category_name']) ?></span>
-                    <?php endif; ?>
-                    <h2><?= h($hero1['title']) ?></h2>
+        <?php /* Main hero — a slideshow of the top stories, the single focal point */ ?>
+        <div class="hero-main reveal">
+            <div class="hero-slideshow" id="heroSlideshow">
+                <?php foreach ($heroSlides as $i => $slide): ?>
+                <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($slide['slug']) ?>"
+                   class="hero-slide<?= $i === 0 ? ' active' : '' ?>">
+                    <div class="hero-media">
+                        <?php $imgS = article_thumb_src($slide['featured_image'], $slide['id'], 900, 560); ?>
+                        <img src="<?= h($imgS) ?>" alt="<?= h($slide['title']) ?>" loading="<?= $i === 0 ? 'eager' : 'lazy' ?>" />
+                        <?= render_thumb_logo() ?>
+                        <div class="hero-overlay">
+                            <?php if ($slide['category_name']): ?>
+                                <span class="cat-badge"><?= h($slide['category_name']) ?></span>
+                            <?php endif; ?>
+                            <h2><?= h($slide['title']) ?></h2>
+                        </div>
+                    </div>
+                </a>
+                <?php endforeach; ?>
+                <?php if (count($heroSlides) > 1): ?>
+                <div class="hero-slide-dots">
+                    <?php foreach ($heroSlides as $i => $slide): ?>
+                        <button type="button" class="hero-slide-dot<?= $i === 0 ? ' active' : '' ?>"
+                                data-slide-index="<?= $i ?>" aria-label="Show slide <?= $i + 1 ?>"></button>
+                    <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
-        </a>
+        </div>
 
         <?php /* Side cards — image, category, title, meta only (no excerpt) so
                  there's no leftover white space stretching below the photo */ ?>
