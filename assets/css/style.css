@@ -323,11 +323,23 @@ a   { color:inherit; text-decoration:none; }
 
 .hero-grid {
     display:grid;
-    grid-template-columns: 2fr 1fr;
-    gap:16px;
+    grid-template-columns: 0.85fr 2.3fr 1fr;
+    gap:20px;
     align-items:start;
 }
+@media(max-width:1100px) { .hero-grid { grid-template-columns: 1fr 2fr 1fr; gap:16px; } }
 @media(max-width:900px)  { .hero-grid { grid-template-columns:1fr; } }
+
+/* Explicit order so the main story always reads first on narrow screens,
+   even though the left list comes first in the markup on desktop. */
+.hero-left { order:1; min-width:0; }
+.hero-main { order:2; }
+.hero-side { order:3; }
+@media(max-width:900px){
+    .hero-main { order:1; }
+    .hero-side { order:2; }
+    .hero-left { order:3; }
+}
 
 /* Main hero card */
 .hero-main {
@@ -390,7 +402,7 @@ a   { color:inherit; text-decoration:none; }
     display:flex; gap:0; flex-direction:column;
     background:var(--card-bg); border:1px solid var(--border);
     border-radius:var(--radius-md); overflow:hidden;
-    text-decoration:none; flex:1;
+    text-decoration:none; flex:1 1 auto;
     transition:box-shadow .22s ease, transform .22s ease;
     box-shadow:var(--shadow-sm);
 }
@@ -398,15 +410,14 @@ a   { color:inherit; text-decoration:none; }
 .hero-side-card .thumb { position:relative; aspect-ratio:16/9; overflow:hidden; background:var(--navy); }
 .hero-side-card .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
 .hero-side-card:hover .thumb img { transform:scale(1.05); }
-.hero-side-card .body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:7px; flex:1; }
+.hero-side-card .body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:5px; }
 .hero-side-card h3 {
     font-family:var(--font-headings);
     font-size:15px; font-weight:700; line-height:1.3; color:var(--black);
-    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
     transition:color .2s;
 }
 .hero-side-card:hover h3 { color:var(--maroon); }
-.hero-side-card .excerpt { font-size:13px; color:var(--gray); line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 
 @media(max-width:900px){
     .hero-main img { height:320px; }
@@ -418,6 +429,9 @@ a   { color:inherit; text-decoration:none; }
     .hero-overlay { padding:12px 14px 14px; }
     .hero-overlay h1 { font-size:16px; }
     .hero-side { flex-direction:column; }
+    /* Back to column stacking here, so undo the 900px row breakpoint's
+       flex-basis:0 (it collapses card height to ~0 in a column layout). */
+    .hero-side-card { flex:1 1 auto; }
 
     /* Featured image loses its rounded corners on mobile and sits inset
        with breathing room instead of running edge-to-edge. */
@@ -434,11 +448,10 @@ a   { color:inherit; text-decoration:none; }
 .card-meta .author { font-weight:600; }
 
 /* ============================================================
-   HIGHLIGHTED STORIES  (extra featured picks, small list below hero)
+   HERO LEFT LIST  (more headlines, narrow column beside the main story)
    ============================================================ */
-.highlighted-section { padding:18px 0 0; }
 .highlighted-list {
-    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    display:flex; flex-direction:column; gap:14px;
 }
 .highlighted-item {
     display:flex; gap:10px; align-items:flex-start; text-decoration:none;
@@ -459,8 +472,13 @@ a   { color:inherit; text-decoration:none; }
     margin-bottom:3px;
 }
 .highlighted-body .article-meta { font-size:10.5px; }
-@media(max-width:900px){ .highlighted-list { grid-template-columns:repeat(2,1fr); } }
-@media(max-width:500px){ .highlighted-list { grid-template-columns:1fr; } }
+@media(max-width:900px){
+    .highlighted-list { flex-direction:row; flex-wrap:wrap; }
+    .highlighted-item { flex:1 1 calc(50% - 7px); }
+}
+@media(max-width:600px){
+    .highlighted-item { flex-basis:100%; }
+}
 
 /* ============================================================
    CATEGORY FILTER PILLS

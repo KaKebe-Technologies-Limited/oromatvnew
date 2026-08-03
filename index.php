@@ -79,17 +79,42 @@ require __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<?php /* ── HERO SECTION ── */
+<?php /* ── HERO SECTION ──
+   3-column, CNN-style: a quick-read list on the left, the single main
+   story centered as the sole focal point, and compact side cards on
+   the right. */
 $hero1 = $featured[0] ?? null;
 $hero2 = $featured[1] ?? null;
 $hero3 = $featured[2] ?? null;
-$highlighted = array_slice($featured, 3, 4);
+$heroLeftList = array_slice($featured, 3, 4);
 ?>
 <?php if ($hero1): ?>
 <section class="hero-section container-wide">
     <div class="hero-grid">
 
-        <?php /* Main hero card */ ?>
+        <?php /* Left column — more headlines, keeps the center image the sole focal point */ ?>
+        <?php if ($heroLeftList): ?>
+        <div class="hero-left">
+            <div class="highlighted-list">
+                <?php foreach ($heroLeftList as $h): ?>
+                    <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($h['slug']) ?>" class="highlighted-item reveal">
+                        <div class="highlighted-thumb">
+                            <?php $hImg = article_thumb_src($h['featured_image'], $h['id'], 200, 200); ?>
+                            <img src="<?= h($hImg) ?>" alt="<?= h($h['title']) ?>" loading="lazy" />
+                            <?= render_thumb_logo() ?>
+                        </div>
+                        <div class="highlighted-body">
+                            <?php if ($h['category_name']): ?><span class="side-cat"><?= h($h['category_name']) ?></span><?php endif; ?>
+                            <h4><?= h($h['title']) ?></h4>
+                            <div class="article-meta"><span><?= h(time_ago($h['created_at'])) ?></span></div>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php /* Main hero card — the single focal story, centered */ ?>
         <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hero1['slug']) ?>"
            class="hero-main reveal">
             <div class="hero-media">
@@ -105,7 +130,8 @@ $highlighted = array_slice($featured, 3, 4);
             </div>
         </a>
 
-        <?php /* Side cards */ ?>
+        <?php /* Side cards — image, category, title, meta only (no excerpt) so
+                 there's no leftover white space stretching below the photo */ ?>
         <div class="hero-side">
             <?php foreach ([$hero2, $hero3] as $hs): if (!$hs) continue; ?>
             <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($hs['slug']) ?>"
@@ -120,7 +146,6 @@ $highlighted = array_slice($featured, 3, 4);
                         <span class="cat-badge cat-badge-sm"><?= h($hs['category_name']) ?></span>
                     <?php endif; ?>
                     <h3><?= h($hs['title']) ?></h3>
-                    <p class="excerpt"><?= h($hs['excerpt'] ?: make_excerpt($hs['content'], 80)) ?></p>
                     <div class="card-meta">
                         <span><?= h(time_ago($hs['created_at'])) ?></span>
                         <span class="sep">·</span>
@@ -131,28 +156,6 @@ $highlighted = array_slice($featured, 3, 4);
             <?php endforeach; ?>
         </div>
 
-    </div>
-</section>
-<?php endif; ?>
-
-<?php /* ── HIGHLIGHTED STORIES (extra featured picks from admin, below the hero) ── */ ?>
-<?php if ($highlighted): ?>
-<section class="container-wide highlighted-section">
-    <div class="highlighted-list">
-        <?php foreach ($highlighted as $h): ?>
-            <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($h['slug']) ?>" class="highlighted-item reveal">
-                <div class="highlighted-thumb">
-                    <?php $hImg = article_thumb_src($h['featured_image'], $h['id'], 200, 200); ?>
-                    <img src="<?= h($hImg) ?>" alt="<?= h($h['title']) ?>" loading="lazy" />
-                    <?= render_thumb_logo() ?>
-                </div>
-                <div class="highlighted-body">
-                    <?php if ($h['category_name']): ?><span class="side-cat"><?= h($h['category_name']) ?></span><?php endif; ?>
-                    <h4><?= h($h['title']) ?></h4>
-                    <div class="article-meta"><span><?= h(time_ago($h['created_at'])) ?></span></div>
-                </div>
-            </a>
-        <?php endforeach; ?>
     </div>
 </section>
 <?php endif; ?>
