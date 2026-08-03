@@ -194,11 +194,27 @@
                 var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
                 return fontsReady.then(function () {
                     if (logo) {
-                        var size = 96, topMargin = 56, rightMargin = 56;
+                        /* Circular white-backed badge, top-left — matches the corner
+                           logo used on thumbnails across the site. */
+                        var size = 96, leftMargin = 56, topMargin = 56;
+                        var cx = leftMargin + size / 2, cy = topMargin + size / 2, r = size / 2;
                         ctx.save();
                         ctx.shadowColor = 'rgba(0,0,0,.45)';
                         ctx.shadowBlur = 14;
-                        ctx.drawImage(logo, W - size - rightMargin, topMargin, size, size);
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,.82)';
+                        ctx.fill();
+                        ctx.restore();
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r - 4, 0, Math.PI * 2);
+                        ctx.clip();
+                        var inner = size - 8;
+                        var lr = logo.width / logo.height, lw, lh;
+                        if (lr > 1) { lw = inner; lh = inner / lr; } else { lh = inner; lw = inner * lr; }
+                        ctx.drawImage(logo, cx - lw / 2, cy - lh / 2, lw, lh);
                         ctx.restore();
                     }
 
@@ -217,7 +233,7 @@
                     ctx.textBaseline = 'alphabetic';
                     ctx.fillText(catLine, PAD, y);
 
-                    y += 56;
+                    y += 76;
 
                     /* title, in the site's maroon */
                     ctx.fillStyle = '#800000';

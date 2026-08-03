@@ -1204,12 +1204,12 @@ body.is-home .hero-banner { display:none; } /* homepage uses hero-section grid i
    IMAGES — NO border-radius anywhere in article body or covers
    ============================================================ */
 .article-cover          { border-radius: 0 !important; }
-.article-cover img      { border-radius: 0 !important; }
+.article-cover img:not(.thumb-logo)      { border-radius: 0 !important; }
 .article-body img       { border-radius: 0 !important; }
 .article-body .img-row img { border-radius: 0 !important; }
 
 /* news cards keep their radius — only article content images are flat */
-.article-layout .article-main img { border-radius: 0 !important; }
+.article-layout .article-main img:not(.thumb-logo) { border-radius: 0 !important; }
 
 /* ============================================================
    SIDE-BY-SIDE IMAGE ROW (two images in one row in article body)
