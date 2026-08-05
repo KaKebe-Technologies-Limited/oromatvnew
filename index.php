@@ -55,17 +55,8 @@ $moreHeadlines = get_latest_articles(
     array_unique(array_merge($shownIds, array_column($latestArticles, 'id')))
 );
 
-// Streams
-$youtubeStreams = db()->query(
-    "SELECT * FROM streams WHERE type='youtube' AND is_active=1
-     ORDER BY is_default DESC, sort_order ASC"
-)->fetchAll();
-$radioStream = db()->query(
-    "SELECT * FROM streams WHERE type='radio' AND is_active=1
-     ORDER BY is_default DESC LIMIT 1"
-)->fetch();
-$defaultYoutube = $youtubeStreams[0] ?? null;
-$streamStatus   = get_setting('stream_status', 'offline');
+// Nav "Live Now" badge (links to watch.php — the homepage no longer embeds a player)
+$streamStatus = get_setting('stream_status', 'offline');
 
 require __DIR__ . '/includes/header.php';
 ?>
@@ -296,81 +287,6 @@ $heroLeftList = array_slice($featured, 5, 4);
     </div>
 </section>
 <?php endif; ?>
-
-<?php /* ── LIVE STREAM SECTION ── */ ?>
-<section class="watch-section" id="watch">
-    <div class="watch-banner-bg"></div>
-    <div class="container">
-        <div class="watch-section-head reveal">
-            <?php if ($streamStatus === 'live'): ?>
-                <span class="live-dot-badge"><span class="dot"></span> Live Now</span>
-            <?php endif; ?>
-            <h2>Watch &amp; Listen <span>Live</span></h2>
-            <p>Stream Oroma TV and Oroma Radio — free, anywhere in the world.</p>
-        </div>
-
-        <div class="player-card reveal">
-            <div class="player-header">
-                <div>
-                    <h3>Now Streaming</h3>
-                    <p>Stream · Watch · Connect</p>
-                </div>
-                <?php if ($streamStatus === 'live'): ?>
-                    <span class="badge badge-live"><span class="dot"></span> Live</span>
-                <?php else: ?>
-                    <span class="badge badge-offline"><span class="dot"></span> Offline</span>
-                <?php endif; ?>
-            </div>
-
-            <div class="tabs" role="tablist">
-                <button class="tab-btn active" data-tab="youtube" role="tab" aria-selected="true">
-                    <i class="fab fa-youtube"></i> TV
-                </button>
-                <button class="tab-btn" data-tab="radio" role="tab" aria-selected="false">
-                    <i class="fas fa-broadcast-tower"></i> Radio
-                </button>
-            </div>
-
-            <div class="tab-pane active" id="pane-youtube" role="tabpanel">
-                <div class="video-wrapper">
-                    <?php if ($defaultYoutube): ?>
-                        <iframe id="youtubePlayer"
-                            src="<?= h(youtube_embed_url($defaultYoutube['url_or_id'])) ?>"
-                            allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                    <?php else: ?>
-                        <div class="empty-stream">
-                            <i class="fas fa-tv"></i>
-                            <div>No live stream configured.</div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                <?php if (count($youtubeStreams) > 1): ?>
-                    <div class="channel-selector">
-                        <?php foreach ($youtubeStreams as $i => $s): ?>
-                            <button class="channel-btn<?= $i === 0 ? ' active-channel' : '' ?>"
-                                data-embed="<?= h(youtube_embed_url($s['url_or_id'])) ?>">
-                                <i class="<?= h($s['icon'] ?: 'fas fa-tv') ?>"></i> <?= h($s['name']) ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="tab-pane" id="pane-radio" role="tabpanel">
-                <div class="radio-wrapper">
-                    <?php if ($radioStream): ?>
-                        <iframe src="<?= h($radioStream['url_or_id']) ?>" allow="autoplay" loading="lazy"></iframe>
-                    <?php else: ?>
-                        <div class="empty-stream" style="height:200px;">
-                            <i class="fas fa-headphones"></i>
-                            <div>No radio stream configured.</div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <?php /* ── NEWSLETTER ── */ ?>
 <section class="newsletter-section">

@@ -42,7 +42,6 @@
                     <a href="<?= h(BASE_PATH) ?>/news.php">Latest News</a>
                     <a href="<?= h(BASE_PATH) ?>/watch.php">Watch Live TV</a>
                     <a href="<?= h(BASE_PATH) ?>/previous-shows.php">Previous Shows</a>
-                    <a href="<?= h(BASE_PATH) ?>/watch.php#watch">Radio Stream</a>
                 </nav>
             </div>
 
