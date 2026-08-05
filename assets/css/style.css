@@ -712,6 +712,32 @@ a   { color:inherit; text-decoration:none; }
 .empty-stream { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; height:100%; color:rgba(255,255,255,.7); text-align:center; padding:32px; }
 .empty-stream i { font-size:34px; color:var(--gold); }
 
+/* ── Dacast live player — glowing frame + floating LIVE badge ──
+   .dacast-frame wraps .video-wrapper (rather than merging classes onto the
+   same element) so this gradient border's padding never fights the aspect-
+   ratio box's padding-bottom:56.25% trick. */
+.dacast-frame {
+    position:relative;
+    border-radius:var(--radius-lg);
+    padding:3px;
+    background:linear-gradient(120deg, var(--maroon), var(--gold), var(--maroon));
+    background-size:200% 200%;
+    animation:dacastBorderFlow 6s linear infinite;
+    box-shadow:0 16px 44px rgba(0,0,0,.55);
+}
+@keyframes dacastBorderFlow { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+.dacast-frame .video-wrapper { border-radius:calc(var(--radius-lg) - 3px); }
+.live-pulse-badge {
+    position:absolute; top:14px; left:14px; z-index:2;
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+    color:#fff; font-size:12px; font-weight:800; letter-spacing:.06em;
+    padding:6px 14px 6px 12px; border-radius:40px;
+    border:1px solid rgba(255,255,255,.25);
+    box-shadow:0 4px 14px rgba(0,0,0,.4);
+}
+.live-pulse-badge .dot { width:8px; height:8px; border-radius:50%; background:#ff3b30; box-shadow:0 0 8px #ff3b30; animation:pulse-dot 1.4s infinite; }
+
 .channel-selector { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; justify-content:center; }
 .channel-btn {
     background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
@@ -963,25 +989,8 @@ body.is-home .hero-banner { display:none; } /* homepage uses hero-section grid i
 /* ============================================================
    WATCH PAGE
    ============================================================ */
-.watch-page-hero {
-    background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon) 50%, var(--black) 100%);
-    color: #fff;
-    padding: 48px 0 40px;
-    border-bottom: 3px solid var(--gold);
-}
-.watch-hero-text h1 {
-    font-family: var(--font-headings);
-    font-size: clamp(26px, 4vw, 40px);
-    font-weight: 900;
-    margin: 12px 0 8px;
-    letter-spacing: -0.5px;
-}
-.watch-hero-text p {
-    font-size: 15px;
-    color: rgba(255,255,255,.68);
-}
-
 .watch-player-section { padding: 36px 0 20px; }
+.watch-player-section-top { padding-top: 56px; }
 
 .player-card-full {
     background: var(--white);
@@ -992,22 +1001,6 @@ body.is-home .hero-banner { display:none; } /* homepage uses hero-section grid i
     max-width: 1000px;
     margin: 0 auto;
 }
-.player-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-.player-card-title h2 {
-    font-family: var(--font-headings);
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--black);
-}
-.player-card-title p { font-size: 13px; color: var(--gray); margin-top: 3px; }
-
 @media(max-width:600px){ .player-card-full { padding: 18px 14px 24px; border-radius: var(--radius-md); } }
 
 /* ============================================================

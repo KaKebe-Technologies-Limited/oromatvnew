@@ -11,6 +11,11 @@ $breakingNews  = get_breaking_news(12);
 
 // 3 for the center slideshow + 2 for the side cards + up to 4 more for the left headline list
 $featured = get_featured_articles(9);
+// Only articles actually marked "Featured" should be off-limits to Latest News below —
+// the fallback padding just below borrows latest articles to keep the hero full, and
+// those should still be free to also appear in Latest News (otherwise, on a site with
+// few articles, the hero fallback can swallow everything and leave Latest News empty).
+$realFeaturedIds = array_map('intval', array_column($featured, 'id'));
 // Fallback: pad with latest published so the hero is never left empty
 if (count($featured) < 9) {
     $featIds  = array_column($featured, 'id');
@@ -36,8 +41,9 @@ if ($filterCatSlug) {
     }
 }
 
-// Articles already shown in the hero/highlighted strip should never repeat below
-$shownIds = array_map('intval', array_column($featured, 'id'));
+// Only the genuinely-featured articles are excluded from Latest News below —
+// hero fallback padding (see above) stays eligible to show there too.
+$shownIds = $realFeaturedIds;
 
 $latestArticles = get_latest_articles(5, $filterCatId, 0, $filterCatId ? [] : $shownIds);
 $trending       = get_trending_articles(6);

@@ -5,21 +5,9 @@ require_once __DIR__ . '/includes/previous-shows-functions.php';
 $activeNav   = 'watch';
 $bodyClass   = 'watch-page';
 $pageTitle   = 'Watch Live · ' . SITE_NAME;
-$pageDescription = 'Watch ' . SITE_NAME . ' live TV and radio streams — free, anywhere in the world.';
+$pageDescription = 'Watch ' . SITE_NAME . ' live — free, anywhere in the world.';
 
-// ── streams ──────────────────────────────────────────────────
-$youtubeStreams = db()->query(
-    "SELECT * FROM streams WHERE type='youtube' AND is_active=1
-     ORDER BY is_default DESC, sort_order ASC"
-)->fetchAll();
-
-$radioStream = db()->query(
-    "SELECT * FROM streams WHERE type='radio' AND is_active=1
-     ORDER BY is_default DESC LIMIT 1"
-)->fetch();
-
-$defaultYoutube = $youtubeStreams[0] ?? null;
-$streamStatus   = get_setting('stream_status', 'offline');
+$streamStatus = get_setting('stream_status', 'offline');
 
 // ── previous shows ───────────────────────────────────────────
 $shows = get_previous_shows(50);
@@ -27,90 +15,21 @@ $shows = get_previous_shows(50);
 require __DIR__ . '/includes/header.php';
 ?>
 
-<!-- ── PAGE HERO ── -->
-<div class="watch-page-hero">
-    <div class="container">
-        <div class="watch-hero-text">
-            <?php if ($streamStatus === 'live'): ?>
-                <span class="live-dot-badge"><span class="dot"></span> Live Now</span>
-            <?php endif; ?>
-            <h1><i class="fas fa-broadcast-tower"></i> Watch &amp; Listen Live</h1>
-            <p>Oroma TV and Oroma Radio — streaming free, anywhere in the world.</p>
-        </div>
-    </div>
-</div>
-
 <!-- ── LIVE PLAYER ── -->
-<section class="container watch-player-section">
+<section class="container watch-player-section watch-player-section-top">
     <div class="player-card-full">
-
-        <div class="player-card-header">
-            <div class="player-card-title">
-                <h2>Now Streaming</h2>
-                <p>Tune in live — TV &amp; Radio</p>
-            </div>
-            <?php if ($streamStatus === 'live'): ?>
-                <span class="badge badge-live"><span class="dot"></span> Live</span>
-            <?php else: ?>
-                <span class="badge badge-offline"><span class="dot"></span> Offline</span>
-            <?php endif; ?>
-        </div>
-
-        <!-- tabs -->
-        <div class="tabs" role="tablist">
-            <button class="tab-btn active" data-tab="youtube" role="tab" aria-selected="true">
-                <i class="fab fa-youtube"></i> Live TV
-            </button>
-            <button class="tab-btn" data-tab="radio" role="tab" aria-selected="false">
-                <i class="fas fa-broadcast-tower"></i> Radio
-            </button>
-        </div>
-
-        <!-- YouTube pane -->
-        <div class="tab-pane active" id="pane-youtube" role="tabpanel">
+        <div class="dacast-frame">
             <div class="video-wrapper">
-                <?php if ($defaultYoutube): ?>
-                    <iframe id="youtubePlayer"
-                        src="<?= h(youtube_embed_url($defaultYoutube['url_or_id'])) ?>"
-                        allow="autoplay; encrypted-media; picture-in-picture"
-                        allowfullscreen title="Oroma TV Live Stream"></iframe>
-                <?php else: ?>
-                    <div class="empty-stream">
-                        <i class="fas fa-tv"></i>
-                        <p>No live stream is configured yet.</p>
-                        <p style="font-size:13px;opacity:.7;">Check back soon or set one up in the Admin Panel.</p>
-                    </div>
+                <?php if ($streamStatus === 'live'): ?>
+                    <span class="live-pulse-badge"><span class="dot"></span> LIVE</span>
                 <?php endif; ?>
-            </div>
-
-            <?php if (count($youtubeStreams) > 1): ?>
-            <div class="channel-selector">
-                <?php foreach ($youtubeStreams as $i => $s): ?>
-                    <button class="channel-btn<?= $i === 0 ? ' active-channel' : '' ?>"
-                        data-embed="<?= h(youtube_embed_url($s['url_or_id'])) ?>">
-                        <i class="<?= h($s['icon'] ?: 'fas fa-tv') ?>"></i>
-                        <?= h($s['name']) ?>
-                    </button>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- Radio pane -->
-        <div class="tab-pane" id="pane-radio" role="tabpanel">
-            <div class="radio-wrapper">
-                <?php if ($radioStream): ?>
-                    <iframe src="<?= h($radioStream['url_or_id']) ?>"
-                        allow="autoplay" loading="lazy" title="Oroma Radio"></iframe>
-                <?php else: ?>
-                    <div class="empty-stream" style="height:220px;">
-                        <i class="fas fa-headphones"></i>
-                        <p>No radio stream configured yet.</p>
-                    </div>
-                <?php endif; ?>
+                <iframe id="fcdd965b-4244-ed60-8f9f-0a249792f9dc-live-fd9a7722-2b54-4def-b040-e1887cff2325"
+                    src="https://iframe.dacast.com/live/fcdd965b-4244-ed60-8f9f-0a249792f9dc/fd9a7722-2b54-4def-b040-e1887cff2325"
+                    allow="autoplay; encrypted-media" allowfullscreen
+                    webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen
+                    scrolling="no" title="Oroma TV Live Stream"></iframe>
             </div>
         </div>
-
     </div>
 </section>
 
