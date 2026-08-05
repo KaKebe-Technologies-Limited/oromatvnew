@@ -116,11 +116,7 @@ function render_side_article(array $a): void
     ?>
     <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>" class="side-article">
         <div class="side-thumb">
-            <?php if (!empty($a['featured_image'])): ?>
-                <img src="<?= h(BASE_PATH . '/' . $a['featured_image']) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
-            <?php else: ?>
-                <div class="thumb-fallback"></div>
-            <?php endif; ?>
+            <img src="<?= h(article_thumb_src($a['featured_image'], (int) $a['id'], 160, 160)) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
             <?= render_thumb_logo() ?>
         </div>
         <div class="side-article-body">
@@ -138,11 +134,7 @@ function render_side_feature_card(array $a): void
     ?>
     <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>" class="side-feature-card">
         <div class="thumb">
-            <?php if (!empty($a['featured_image'])): ?>
-                <img src="<?= h(BASE_PATH . '/' . $a['featured_image']) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
-            <?php else: ?>
-                <div class="thumb-fallback"></div>
-            <?php endif; ?>
+            <img src="<?= h(article_thumb_src($a['featured_image'], (int) $a['id'], 360, 220)) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
             <?= render_thumb_logo() ?>
             <?php if (!empty($a['category_name'])): ?><span class="cat-badge"><?= h($a['category_name']) ?></span><?php endif; ?>
         </div>
@@ -161,17 +153,8 @@ function render_side_feature_card(array $a): void
             <?php endif; ?>
 
             <div class="article-cover">
-                <?php if ($article['featured_image']): ?>
-                    <?php
-                    // Normalise featured image path for both local and live
-                    $featSrc = $article['featured_image'];
-                    $featSrc = preg_replace('#^.*/uploads/#', '/uploads/', $featSrc);
-                    $featSrc = rtrim(BASE_PATH, '/') . '/' . ltrim($featSrc, '/');
-                    ?>
-                    <img src="<?= h($featSrc) ?>" alt="<?= h($article['title']) ?>" />
-                <?php else: ?>
-                    <div class="thumb-fallback"></div>
-                <?php endif; ?>
+                <?php $featSrc = article_thumb_src($article['featured_image'], $article['id'], 1200, 675); ?>
+                <img src="<?= h($featSrc) ?>" alt="<?= h($article['title']) ?>" />
                 <?= render_thumb_logo() ?>
                 <?php if (!empty($article['featured_image_caption'])): ?>
                     <figcaption class="cover-caption"><?= h($article['featured_image_caption']) ?></figcaption>

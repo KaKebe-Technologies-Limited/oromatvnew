@@ -605,7 +605,12 @@ function article_thumb_src(?string $featuredImage, int $seed, int $w = 640, int 
     if ($featuredImage && trim($featuredImage) !== '') {
         // Normalise path — strip any stale base-path prefix before /uploads/
         $clean = preg_replace('#^.*/uploads/#', '/uploads/', $featuredImage);
-        return rtrim(BASE_PATH, '/') . '/' . ltrim($clean, '/');
+        // Only trust the stored path if the file is actually on disk — on local
+        // dev the production /uploads files usually aren't synced, so this
+        // falls back to a placeholder instead of a broken <img>.
+        if (is_file(dirname(__DIR__) . '/' . ltrim($clean, '/'))) {
+            return rtrim(BASE_PATH, '/') . '/' . ltrim($clean, '/');
+        }
     }
     return placeholder_image($seed, $w, $h);
 }

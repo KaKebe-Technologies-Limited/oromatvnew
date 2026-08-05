@@ -39,7 +39,7 @@ if ($filterCatSlug) {
 // Articles already shown in the hero/highlighted strip should never repeat below
 $shownIds = array_map('intval', array_column($featured, 'id'));
 
-$latestArticles = get_latest_articles(8, $filterCatId, 0, $filterCatId ? [] : $shownIds);
+$latestArticles = get_latest_articles(5, $filterCatId, 0, $filterCatId ? [] : $shownIds);
 $trending       = get_trending_articles(6);
 
 // A compact, image-light list of further headlines — keeps the homepage from
