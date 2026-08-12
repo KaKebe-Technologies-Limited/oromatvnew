@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formContext = trim((string) ($_POST['context'] ?? ''));
 
     $apiKey = get_setting('openrouter_api_key', '');
-    $model  = get_setting('openrouter_model', 'openai/gpt-oss-20b:free');
+    $model  = get_setting('openrouter_model', 'google/gemini-2.5-flash-lite');
     if ($apiKey === '') {
         $errors[] = 'No OpenRouter API key configured yet. Add one under Settings first.';
     } elseif ($formUrl === '') {

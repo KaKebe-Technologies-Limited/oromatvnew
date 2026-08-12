@@ -10,10 +10,10 @@ class OromaTV_AI_Content_Generator
     private string $model;
     private string $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-    public function __construct(string $apiKey, string $model = 'openai/gpt-oss-20b:free')
+    public function __construct(string $apiKey, string $model = 'google/gemini-2.5-flash-lite')
     {
         $this->apiKey = $apiKey;
-        $this->model = $model !== '' ? $model : 'openai/gpt-oss-20b:free';
+        $this->model = $model !== '' ? $model : 'google/gemini-2.5-flash-lite';
     }
 
     /**
@@ -186,7 +186,9 @@ class OromaTV_AI_Content_Generator
                 'X-Title: Oroma TV AI Writer',
             ],
             CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_TIMEOUT => 90,
+            // Kept comfortably under typical shared-hosting PHP/gateway timeouts so a
+            // slow model fails with our own clean error instead of a raw 500 from the host.
+            CURLOPT_TIMEOUT => 50,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $streamStatus = in_array($_POST['stream_status'] ?? '', ['live','offline'], true)
                     ? $_POST['stream_status'] : 'offline';
     $openrouterApiKey = trim((string) ($_POST['openrouter_api_key'] ?? ''));
-    $openrouterModel  = trim((string) ($_POST['openrouter_model'] ?? '')) ?: 'openai/gpt-oss-20b:free';
+    $openrouterModel  = trim((string) ($_POST['openrouter_model'] ?? '')) ?: 'google/gemini-2.5-flash-lite';
 
     set_setting('show_article_views', $showViews);
     set_setting('article_font',       $articleFont);
@@ -28,7 +28,7 @@ $showViews    = get_setting('show_article_views', '1');
 $articleFont  = get_setting('article_font', 'inter');
 $streamStatus = get_setting('stream_status', 'offline');
 $openrouterApiKey = get_setting('openrouter_api_key', '');
-$openrouterModel  = get_setting('openrouter_model', 'openai/gpt-oss-20b:free');
+$openrouterModel  = get_setting('openrouter_model', 'google/gemini-2.5-flash-lite');
 
 $pageTitle      = 'Site Settings';
 $activeAdminNav = 'settings';
@@ -119,10 +119,11 @@ require __DIR__ . '/includes/admin-header.php';
             <div class="form-group" style="margin-top:16px;">
                 <label for="openrouter_model" style="font-weight:600;">Model</label>
                 <input class="form-control" type="text" id="openrouter_model" name="openrouter_model"
-                       style="max-width:420px;" value="<?= h($openrouterModel) ?>" placeholder="openai/gpt-oss-20b:free" />
+                       style="max-width:420px;" value="<?= h($openrouterModel) ?>" placeholder="google/gemini-2.5-flash-lite" />
                 <div class="form-hint">
                     Any model ID from <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer">openrouter.ai/models</a>.
-                    Defaults to a free-tier model — swap in a paid one if you want stronger output.
+                    Defaults to a fast, low-cost model. Free-tier (":free") models share overloaded
+                    capacity and can take 60–90+ seconds or time out — avoid them here.
                 </div>
             </div>
         </div>
