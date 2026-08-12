@@ -1,21 +1,23 @@
 <?php
 /**
- * Oroma TV AI Content Assistant — turns a source URL into a draft article
- * that REPORTS ON the source (with attribution baked in), not a disguised
- * copy of it. See admin/ai-generate.php for how this is used.
+ * Oroma TV AI Content Assistant (OpenRouter) — turns a source URL into a draft
+ * article that REPORTS ON the source (with attribution baked in), not a
+ * disguised copy of it. See admin/ai-generate.php for how this is used.
  */
 class OromaTV_AI_Content_Generator
 {
     private string $apiKey;
-    private string $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    private string $model;
+    private string $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-    public function __construct(string $apiKey)
+    public function __construct(string $apiKey, string $model = 'openai/gpt-oss-20b:free')
     {
         $this->apiKey = $apiKey;
+        $this->model = $model !== '' ? $model : 'openai/gpt-oss-20b:free';
     }
 
     /**
-     * Fetch a URL, send it to Gemini, and return a ready-to-store draft.
+     * Fetch a URL, send it to OpenRouter, and return a ready-to-store draft.
      * Always returns ['success' => bool, ...].
      */
     public function generateDraft(string $url, string $extraContext = ''): array
@@ -30,7 +32,7 @@ class OromaTV_AI_Content_Generator
         }
 
         $prompt = $this->buildPrompt($fetched['text'], $fetched['final_url'], $fetched['source_name'], $extraContext);
-        $result = $this->callGemini($prompt, $this->responseSchema());
+        $result = $this->callOpenRouter($prompt);
         if (!$result['success']) {
             return $result;
         }
@@ -149,46 +151,42 @@ class OromaTV_AI_Content_Generator
         }
 
         $lines[] = 'Write the piece in your own words (not copied phrasing from the source), with a '
-            . 'Uganda-relevant angle only where it is genuinely relevant. Return your result using the '
-            . 'provided JSON schema — body_html should use only <p>, <h2>, <h3>, <ul>, <li>, and '
-            . '<blockquote> tags, and should NOT repeat the headline as an <h1>.';
+            . 'Uganda-relevant angle only where it is genuinely relevant. body_html should use only '
+            . '<p>, <h2>, <h3>, <ul>, <li>, and <blockquote> tags, and should NOT repeat the headline as an <h1>.';
+
+        $lines[] = 'Respond with ONLY a single valid JSON object (no markdown code fences, no commentary '
+            . 'before or after it) with exactly these keys: "headline" (string), "excerpt" (string, one or '
+            . 'two sentences, under 200 characters), "body_html" (string), "source_name" (string — the best '
+            . 'guess at the original publisher/outlet name), "image_idea" (string — a one-sentence suggestion '
+            . 'for a fitting featured image).';
 
         return implode("\n\n", $lines);
     }
 
-    private function responseSchema(): array
-    {
-        return [
-            'type' => 'OBJECT',
-            'properties' => [
-                'headline'    => ['type' => 'STRING'],
-                'excerpt'     => ['type' => 'STRING', 'description' => 'One or two sentence summary, under 200 characters.'],
-                'body_html'   => ['type' => 'STRING', 'description' => 'Article body as simple HTML (<p>, <h2>, <h3>, <ul>, <li>, <blockquote> only).'],
-                'source_name' => ['type' => 'STRING', 'description' => 'Best-guess name of the original publisher/outlet.'],
-                'image_idea'  => ['type' => 'STRING', 'description' => 'One-sentence suggestion for a fitting featured image.'],
-            ],
-            'required' => ['headline', 'excerpt', 'body_html'],
-        ];
-    }
-
-    private function callGemini(string $promptText, array $schema): array
+    private function callOpenRouter(string $promptText): array
     {
         $payload = [
-            'contents' => [['parts' => [['text' => $promptText]]]],
-            'generationConfig' => [
-                'responseMimeType' => 'application/json',
-                'responseSchema' => $schema,
-                'temperature' => 0.6,
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => 'You always respond with a single valid JSON object and nothing else — no markdown fences, no commentary.'],
+                ['role' => 'user', 'content' => $promptText],
             ],
+            'response_format' => ['type' => 'json_object'],
+            'temperature' => 0.6,
         ];
 
-        $ch = curl_init($this->apiUrl . '?key=' . urlencode($this->apiKey));
+        $ch = curl_init($this->apiUrl);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
-            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $this->apiKey,
+                'Content-Type: application/json',
+                'HTTP-Referer: ' . (defined('SITE_URL') ? SITE_URL : 'https://oromatv.com'),
+                'X-Title: Oroma TV AI Writer',
+            ],
             CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_TIMEOUT => 60,
+            CURLOPT_TIMEOUT => 90,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -196,24 +194,29 @@ class OromaTV_AI_Content_Generator
         curl_close($ch);
 
         if ($response === false) {
-            return ['success' => false, 'error' => 'Network error contacting Gemini: ' . $curlErr];
+            return ['success' => false, 'error' => 'Network error contacting OpenRouter: ' . $curlErr];
         }
 
         $data = json_decode($response, true);
 
         if ($httpCode !== 200) {
             $msg = $data['error']['message'] ?? substr($response, 0, 300);
-            return ['success' => false, 'error' => 'Gemini API error: ' . $msg];
+            return ['success' => false, 'error' => 'OpenRouter API error: ' . $msg];
         }
 
-        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        $text = $data['choices'][0]['message']['content'] ?? null;
         if (!$text) {
-            return ['success' => false, 'error' => 'Gemini returned an unexpected response.'];
+            return ['success' => false, 'error' => 'OpenRouter returned an unexpected response.'];
         }
 
-        $parsed = json_decode($text, true);
+        // Some models wrap JSON in ```json fences despite instructions — strip those before decoding.
+        $clean = trim($text);
+        $clean = preg_replace('/^```(?:json)?\s*/i', '', $clean);
+        $clean = preg_replace('/\s*```$/', '', $clean);
+
+        $parsed = json_decode($clean, true);
         if (!is_array($parsed) || empty($parsed['headline']) || empty($parsed['body_html'])) {
-            return ['success' => false, 'error' => 'Gemini response was not valid structured JSON.'];
+            return ['success' => false, 'error' => 'OpenRouter response was not valid structured JSON.'];
         }
 
         return ['success' => true, 'data' => $parsed];

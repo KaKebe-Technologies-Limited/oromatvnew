@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_login();
-require_once __DIR__ . '/../includes/gemini-article-generator.php';
+require_once __DIR__ . '/../includes/openrouter-article-generator.php';
 
 $errors = [];
 $formUrl = '';
@@ -14,13 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formUrl = trim((string) ($_POST['url'] ?? ''));
     $formContext = trim((string) ($_POST['context'] ?? ''));
 
-    $apiKey = get_setting('gemini_api_key', '');
+    $apiKey = get_setting('openrouter_api_key', '');
+    $model  = get_setting('openrouter_model', 'openai/gpt-oss-20b:free');
     if ($apiKey === '') {
-        $errors[] = 'No Gemini API key configured yet. Add one under Settings first.';
+        $errors[] = 'No OpenRouter API key configured yet. Add one under Settings first.';
     } elseif ($formUrl === '') {
         $errors[] = 'Please paste a source URL.';
     } else {
-        $generator = new OromaTV_AI_Content_Generator($apiKey);
+        $generator = new OromaTV_AI_Content_Generator($apiKey, $model);
         $draft = $generator->generateDraft($formUrl, $formContext);
 
         if (!$draft['success']) {
@@ -62,7 +63,7 @@ require __DIR__ . '/includes/admin-header.php';
     <?php endif; ?>
 
     <p style="color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:22px;">
-        Paste a link to a news story, tweet, or blog post. Gemini drafts an Oroma TV piece that
+        Paste a link to a news story, tweet, or blog post. The AI drafts an Oroma TV piece that
         <strong>reports on</strong> it — the source is credited and linked automatically, both
         in the prompt and again in code — then hands you a <strong>Draft</strong> to review in the
         normal editor: add a category, attach an image, edit freely, and publish when you're happy with it.

@@ -11,12 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    ? $_POST['article_font'] : 'inter';
     $streamStatus = in_array($_POST['stream_status'] ?? '', ['live','offline'], true)
                     ? $_POST['stream_status'] : 'offline';
-    $geminiApiKey = trim((string) ($_POST['gemini_api_key'] ?? ''));
+    $openrouterApiKey = trim((string) ($_POST['openrouter_api_key'] ?? ''));
+    $openrouterModel  = trim((string) ($_POST['openrouter_model'] ?? '')) ?: 'openai/gpt-oss-20b:free';
 
     set_setting('show_article_views', $showViews);
     set_setting('article_font',       $articleFont);
     set_setting('stream_status',      $streamStatus);
-    set_setting('gemini_api_key',     $geminiApiKey);
+    set_setting('openrouter_api_key', $openrouterApiKey);
+    set_setting('openrouter_model',   $openrouterModel);
 
     flash('success', 'Settings saved.');
     redirect(BASE_PATH . '/admin/settings.php');
@@ -25,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $showViews    = get_setting('show_article_views', '1');
 $articleFont  = get_setting('article_font', 'inter');
 $streamStatus = get_setting('stream_status', 'offline');
-$geminiApiKey = get_setting('gemini_api_key', '');
+$openrouterApiKey = get_setting('openrouter_api_key', '');
+$openrouterModel  = get_setting('openrouter_model', 'openai/gpt-oss-20b:free');
 
 $pageTitle      = 'Site Settings';
 $activeAdminNav = 'settings';
@@ -103,13 +106,23 @@ require __DIR__ . '/includes/admin-header.php';
             </h3>
 
             <div class="form-group">
-                <label for="gemini_api_key" style="font-weight:600;">Google Gemini API Key</label>
-                <input class="form-control" type="password" id="gemini_api_key" name="gemini_api_key"
+                <label for="openrouter_api_key" style="font-weight:600;">OpenRouter API Key</label>
+                <input class="form-control" type="password" id="openrouter_api_key" name="openrouter_api_key"
                        style="max-width:420px;" autocomplete="off"
-                       value="<?= h($geminiApiKey) ?>" placeholder="Paste your Gemini API key" />
+                       value="<?= h($openrouterApiKey) ?>" placeholder="sk-or-v1-…" />
                 <div class="form-hint">
-                    Free to get from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+                    Get a key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>.
                     Required for the <a href="<?= h(BASE_PATH) ?>/admin/ai-generate.php">AI Article Writer</a> tool.
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+                <label for="openrouter_model" style="font-weight:600;">Model</label>
+                <input class="form-control" type="text" id="openrouter_model" name="openrouter_model"
+                       style="max-width:420px;" value="<?= h($openrouterModel) ?>" placeholder="openai/gpt-oss-20b:free" />
+                <div class="form-hint">
+                    Any model ID from <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer">openrouter.ai/models</a>.
+                    Defaults to a free-tier model — swap in a paid one if you want stronger output.
                 </div>
             </div>
         </div>
