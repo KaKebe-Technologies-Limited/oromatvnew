@@ -288,23 +288,4 @@ $heroLeftList = array_slice($featured, 5, 5);
 </section>
 <?php endif; ?>
 
-<?php /* ── NEWSLETTER ── */ ?>
-<section class="newsletter-section">
-    <div class="container">
-        <div class="newsletter-box reveal">
-            <div class="newsletter-text">
-                <i class="fas fa-envelope-open-text"></i>
-                <div>
-                    <h3>Stay Informed</h3>
-                    <p>Get the latest Oroma TV news delivered to your inbox.</p>
-                </div>
-            </div>
-            <form class="newsletter-form" onsubmit="return false;">
-                <input type="email" placeholder="Your email address" aria-label="Email address" />
-                <button type="submit" class="btn btn-gold">Subscribe <i class="fas fa-arrow-right"></i></button>
-            </form>
-        </div>
-    </div>
-</section>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>
