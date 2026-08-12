@@ -137,9 +137,14 @@ class OromaTV_AI_Content_Generator
             . "NOT your own first-hand reporting — you are summarizing and contextualizing someone else's "
             . "reporting for the Oroma TV audience, the way a wire desk or news aggregator would.",
 
-            "STRICT ATTRIBUTION RULES:\n"
-            . "- Naturally attribute the facts to the original source throughout the body text, e.g. "
-            . "\"according to $sourceLabel\", \"$sourceLabel reports that...\", \"as first reported by $sourceLabel\".\n"
+            "ATTRIBUTION RULES:\n"
+            . "- A credit line naming and linking $sourceLabel is already shown above the article body — "
+            . "do NOT repeat the source name in every paragraph or write phrases like \"according to "
+            . "$sourceLabel\" / \"$sourceLabel reports that\" throughout. Write it as a normal, confident "
+            . "news article; at most one light, natural mention of the source is enough, and it's fine to "
+            . "have none at all in the body.\n"
+            . "- Never quote the source verbatim or use quotation marks around lifted sentences — always "
+            . "paraphrase facts fully in your own words.\n"
             . "- Never imply Oroma TV conducted original interviews, obtained exclusive access, or witnessed events first-hand.\n"
             . "- Do not fabricate quotes, statistics, or details that are not present in the source content below.",
 
@@ -150,9 +155,11 @@ class OromaTV_AI_Content_Generator
             $lines[] = 'ADDITIONAL INSTRUCTIONS FROM THE EDITOR: ' . trim($extraContext);
         }
 
-        $lines[] = 'Write the piece in your own words (not copied phrasing from the source), with a '
-            . 'Uganda-relevant angle only where it is genuinely relevant. body_html should use only '
-            . '<p>, <h2>, <h3>, <ul>, <li>, and <blockquote> tags, and should NOT repeat the headline as an <h1>.';
+        $lines[] = 'Write the piece in your own words, with a Uganda-relevant angle only where it is '
+            . 'genuinely relevant. Keep it neat and well organized: short, focused paragraphs (roughly '
+            . '2–4 sentences each, no walls of text), one clear idea per paragraph, and a logical flow from '
+            . 'one section to the next. body_html should use only <p>, <h2>, <h3>, <ul>, <li>, and '
+            . '<blockquote> tags, and should NOT repeat the headline as an <h1>.';
 
         $lines[] = 'Respond with ONLY a single valid JSON object (no markdown code fences, no commentary '
             . 'before or after it) with exactly these keys: "headline" (string), "excerpt" (string, one or '
