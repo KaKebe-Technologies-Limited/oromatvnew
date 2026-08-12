@@ -9,15 +9,15 @@ $pageTitle  = SITE_NAME . ' · Live Stream & News';
 $categories    = get_active_categories();
 $breakingNews  = get_breaking_news(12);
 
-// 3 for the center slideshow + 2 for the side cards + up to 4 more for the left headline list
-$featured = get_featured_articles(9);
+// 3 for the center slideshow + 2 for the side cards + up to 5 more for the left headline list
+$featured = get_featured_articles(10);
 // Only articles actually marked "Featured" should be off-limits to Latest News below —
 // the fallback padding just below borrows latest articles to keep the hero full, and
 // those should still be free to also appear in Latest News (otherwise, on a site with
 // few articles, the hero fallback can swallow everything and leave Latest News empty).
 $realFeaturedIds = array_map('intval', array_column($featured, 'id'));
 // Fallback: pad with latest published so the hero is never left empty
-if (count($featured) < 9) {
+if (count($featured) < 10) {
     $featIds  = array_column($featured, 'id');
     $placeholders = count($featIds) ? implode(',', array_fill(0, count($featIds), '?')) : '0';
     $stmt = db()->prepare(
@@ -26,7 +26,7 @@ if (count($featured) < 9) {
          LEFT JOIN categories c ON c.id = a.category_id
          LEFT JOIN users u ON u.id = a.author_id
          WHERE a.status='published' AND a.id NOT IN ($placeholders)
-         ORDER BY a.created_at DESC LIMIT " . (9 - count($featured))
+         ORDER BY a.created_at DESC LIMIT " . (10 - count($featured))
     );
     $stmt->execute($featIds ?: []);
     $featured = array_merge($featured, $stmt->fetchAll());
@@ -83,7 +83,7 @@ require __DIR__ . '/includes/header.php';
 $heroSlides   = array_slice($featured, 0, 3);
 $hero2        = $featured[3] ?? null;
 $hero3        = $featured[4] ?? null;
-$heroLeftList = array_slice($featured, 5, 4);
+$heroLeftList = array_slice($featured, 5, 5);
 ?>
 <?php if ($heroSlides): ?>
 <section class="hero-section container-wide">
