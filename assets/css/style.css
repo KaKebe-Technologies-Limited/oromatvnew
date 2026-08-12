@@ -842,6 +842,16 @@ a   { color:inherit; text-decoration:none; }
 .article-body h3 { font-family:var(--font-headings); font-size:21px; margin:22px 0 8px; font-weight:700; }
 /* Tight paragraph spacing — prevents AI-pasted double gaps */
 .article-body p  { margin-top:0; margin-bottom:14px; }
+
+/* AI-writer source attribution line — also cancel the drop-cap above when
+   this, not the real opening paragraph, ends up first in the body. */
+.article-body p.ai-source-note {
+    font-size:14px; color:var(--gray); font-style:italic;
+    border-left:3px solid var(--maroon); background:rgba(128,0,0,.04);
+    padding:8px 14px; border-radius:0 6px 6px 0; margin-bottom:20px;
+}
+.article-body p.ai-source-note::first-letter { all:unset; }
+.article-body p.ai-source-note a { color:var(--maroon); font-weight:600; }
 .article-body p + p { margin-top:0; }
 /* Collapse any empty paragraphs that slip through */
 .article-body p:empty { display:none; }

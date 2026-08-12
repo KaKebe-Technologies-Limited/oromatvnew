@@ -36,6 +36,7 @@ function admin_nav_class(string $key, string $active): string
     <nav class="admin-nav">
         <a href="<?= h(BASE_PATH) ?>/admin/dashboard.php" class="<?= admin_nav_class('dashboard', $activeAdminNav) ?>"><i class="fas fa-gauge"></i> Dashboard</a>
         <a href="<?= h(BASE_PATH) ?>/admin/articles.php"   class="<?= admin_nav_class('articles',   $activeAdminNav) ?>"><i class="fas fa-newspaper"></i> Articles</a>
+        <a href="<?= h(BASE_PATH) ?>/admin/ai-generate.php" class="<?= admin_nav_class('ai-writer', $activeAdminNav) ?>"><i class="fas fa-wand-magic-sparkles"></i> AI Writer</a>
         <a href="<?= h(BASE_PATH) ?>/admin/categories.php" class="<?= admin_nav_class('categories', $activeAdminNav) ?>"><i class="fas fa-layer-group"></i> Categories</a>
         <a href="<?= h(BASE_PATH) ?>/admin/comments.php" class="<?= admin_nav_class('comments', $activeAdminNav) ?>" style="justify-content:space-between;">
             <span><i class="fas fa-comments"></i> Comments</span>

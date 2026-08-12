@@ -11,10 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    ? $_POST['article_font'] : 'inter';
     $streamStatus = in_array($_POST['stream_status'] ?? '', ['live','offline'], true)
                     ? $_POST['stream_status'] : 'offline';
+    $geminiApiKey = trim((string) ($_POST['gemini_api_key'] ?? ''));
 
     set_setting('show_article_views', $showViews);
     set_setting('article_font',       $articleFont);
     set_setting('stream_status',      $streamStatus);
+    set_setting('gemini_api_key',     $geminiApiKey);
 
     flash('success', 'Settings saved.');
     redirect(BASE_PATH . '/admin/settings.php');
@@ -23,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $showViews    = get_setting('show_article_views', '1');
 $articleFont  = get_setting('article_font', 'inter');
 $streamStatus = get_setting('stream_status', 'offline');
+$geminiApiKey = get_setting('gemini_api_key', '');
 
 $pageTitle      = 'Site Settings';
 $activeAdminNav = 'settings';
@@ -87,6 +90,26 @@ require __DIR__ . '/includes/admin-header.php';
                 </select>
                 <div class="form-hint">
                     Controls the "Live Now" badge in the nav and hero sections.
+                </div>
+            </div>
+        </div>
+
+        <!-- ── AI Article Writer ── -->
+        <div style="margin-bottom:28px;">
+            <h3 style="font-size:13px;font-weight:800;text-transform:uppercase;
+                       letter-spacing:.7px;color:var(--text-muted);margin-bottom:16px;
+                       border-bottom:1px solid var(--border);padding-bottom:10px;">
+                AI Article Writer
+            </h3>
+
+            <div class="form-group">
+                <label for="gemini_api_key" style="font-weight:600;">Google Gemini API Key</label>
+                <input class="form-control" type="password" id="gemini_api_key" name="gemini_api_key"
+                       style="max-width:420px;" autocomplete="off"
+                       value="<?= h($geminiApiKey) ?>" placeholder="Paste your Gemini API key" />
+                <div class="form-hint">
+                    Free to get from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.
+                    Required for the <a href="<?= h(BASE_PATH) ?>/admin/ai-generate.php">AI Article Writer</a> tool.
                 </div>
             </div>
         </div>
