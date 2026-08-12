@@ -340,8 +340,11 @@ a   { color:inherit; text-decoration:none; }
 @media(max-width:900px){
     .hero-left, .hero-main, .hero-side { grid-column:1; }
     .hero-main { order:1; }
-    .hero-side { order:2; }
-    .hero-left { order:3; }
+    /* Mobile: just the slider, then the small "latest" thumbnails right below
+       it — the extra full-photo side cards are dropped so nothing between
+       the slider and the news grid reads as another stack of big cards. */
+    .hero-side { display:none; }
+    .hero-left { order:2; }
 }
 
 /* Main hero card — an auto-rotating slideshow of the top stories */
