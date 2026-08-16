@@ -33,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $excerpt = $draft['excerpt'] !== '' ? $draft['excerpt'] : make_excerpt($content);
 
             $stmt = db()->prepare(
-                "INSERT INTO articles (title, slug, excerpt, content, category_id, author_id, status, is_featured, is_breaking, body_font)
-                 VALUES (?, ?, ?, ?, NULL, ?, 'draft', 0, 0, 'inter')"
+                "INSERT INTO articles (title, slug, excerpt, content, category_id, author_id, status, is_featured, is_breaking, body_font, created_at)
+                 VALUES (?, ?, ?, ?, NULL, ?, 'draft', 0, 0, 'inter', ?)"
             );
-            $stmt->execute([$title, $slug, $excerpt, $content, current_user()['id']]);
+            $stmt->execute([$title, $slug, $excerpt, $content, current_user()['id'], date('Y-m-d H:i:s')]);
             $newId = (int) db()->lastInsertId();
 
             $imgHint = $draft['image_idea'] !== '' ? ' Suggested image: "' . $draft['image_idea'] . '".' : '';

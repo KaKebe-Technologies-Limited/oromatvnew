@@ -83,11 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $stmt = db()->prepare(
                     'INSERT INTO articles (title, slug, excerpt, content, featured_image, featured_image_caption, category_id, author_id,
-                     meta_title, meta_description, status, is_featured, is_breaking, body_font)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+                     meta_title, meta_description, status, is_featured, is_breaking, body_font, created_at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
                 );
+                // created_at is stamped from PHP (not MySQL's own NOW()) so it matches the
+                // clock time_ago() reads from — the DB server's own timezone otherwise runs
+                // ~3 hours off Africa/Nairobi, making every fresh post read "3 hours ago".
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId, $authorId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, date('Y-m-d H:i:s')]);
                 $articleId = (int) db()->lastInsertId();
             }
 
