@@ -53,6 +53,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isBreaking  = isset($_POST['is_breaking'])  ? 1 : 0;
         $bodyFont    = in_array($_POST['body_font'] ?? '', ['inter','lora'], true) ? $_POST['body_font'] : 'inter';
 
+        // Publish date — lets the author backdate (or forward-date) an article.
+        // The <input type="datetime-local"> posts as "Y-m-d\TH:i"; fall back to a
+        // plain "Y-m-d H:i:s" too. Empty means "use now" for new posts / keep the
+        // current date on edits.
+        $publishDateRaw = trim((string) ($_POST['publish_date'] ?? ''));
+        $publishDate = null;
+        if ($publishDateRaw !== '') {
+            $dt = DateTime::createFromFormat('Y-m-d\TH:i', $publishDateRaw)
+                ?: DateTime::createFromFormat('Y-m-d\TH:i:s', $publishDateRaw)
+                ?: DateTime::createFromFormat('Y-m-d H:i:s', $publishDateRaw);
+            if ($dt) {
+                $publishDate = $dt->format('Y-m-d H:i:s');
+            } else {
+                $errors[] = 'Publish date is not a valid date/time.';
+            }
+        }
+
         $featuredImage = $existing['featured_image'] ?? null;
         if (!empty($_FILES['featured_image_file']) && $_FILES['featured_image_file']['error'] === UPLOAD_ERR_OK) {
             $uploadError = null;
@@ -73,12 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $authorId = $existing['author_id'] ?? current_user()['id'];
 
             if ($existing) {
+                // Keep the existing date unless the author picked a new one.
+                $createdAt = $publishDate ?? $existing['created_at'];
                 $stmt = db()->prepare(
                     'UPDATE articles SET title=?, slug=?, excerpt=?, content=?, featured_image=?, featured_image_caption=?, category_id=?,
-                     meta_title=?, meta_description=?, status=?, is_featured=?, is_breaking=?, body_font=? WHERE id=?'
+                     meta_title=?, meta_description=?, status=?, is_featured=?, is_breaking=?, body_font=?, created_at=? WHERE id=?'
                 );
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, $id]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, $createdAt, $id]);
                 $articleId = $id;
             } else {
                 $stmt = db()->prepare(
@@ -90,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // clock time_ago() reads from — the DB server's own timezone otherwise runs
                 // ~3 hours off Africa/Nairobi, making every fresh post read "3 hours ago".
                 $stmt->execute([$title, $slug, $excerpt, $content, $featuredImage, $featuredImageCaption, $categoryId, $authorId,
-                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, date('Y-m-d H:i:s')]);
+                    $metaTitle, $metaDescription, $status, $isFeatured, $isBreaking, $bodyFont, $publishDate ?? date('Y-m-d H:i:s')]);
                 $articleId = (int) db()->lastInsertId();
             }
 
@@ -125,6 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'is_breaking' => isset($_POST['is_breaking']) ? 1 : 0,
         'body_font'   => $_POST['body_font'] ?? 'inter',
         'featured_image_caption' => $_POST['featured_image_caption'] ?? '',
+        'created_at'  => $publishDate ?? ($existing['created_at'] ?? null),
         'id' => $id,
     ]);
 }
@@ -141,6 +161,17 @@ if ($id > 0) {
 }
 
 $categories = db()->query('SELECT name FROM categories ORDER BY name ASC')->fetchAll();
+
+// Value for the "Publish date" picker (datetime-local wants "Y-m-d\TH:i").
+// On a failed POST keep exactly what the author typed; otherwise show the
+// article's current date, or now for a brand-new article.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $publishDateValue = trim((string) ($_POST['publish_date'] ?? ''));
+} elseif (!empty($existing['created_at'])) {
+    $publishDateValue = date('Y-m-d\TH:i', strtotime($existing['created_at']));
+} else {
+    $publishDateValue = date('Y-m-d\TH:i');
+}
 
 $pageTitle = $existing ? 'Edit Article' : 'New Article';
 $activeAdminNav = 'articles';
@@ -210,6 +241,12 @@ require __DIR__ . '/includes/admin-header.php';
                         <option value="draft" <?= ($existing['status'] ?? 'draft') === 'draft' ? 'selected' : '' ?>>Draft</option>
                         <option value="published" <?= ($existing['status'] ?? '') === 'published' ? 'selected' : '' ?>>Published</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="publish_date">Publish date</label>
+                    <input class="form-control" type="datetime-local" id="publish_date" name="publish_date"
+                           value="<?= h($publishDateValue) ?>" />
+                    <div class="form-hint">Backdate or forward-date the article. This is the date shown on the site and used for ordering.</div>
                 </div>
                 <div class="form-group">
                     <label class="toggle-switch">
