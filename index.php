@@ -138,7 +138,7 @@ require __DIR__ . '/includes/header.php';
                 <span class="side-story-body">
                     <?php if ($hs['category_name']): ?><span class="chip"><?= h($hs['category_name']) ?></span><?php endif; ?>
                     <span class="side-story-title"><?= h($hs['title']) ?></span>
-                    <span class="side-story-meta">By <b><?= h($hs['author_name'] ?? 'Oroma TV') ?></b> <span class="dot-sep"></span> <?= h(format_date($hs['created_at'])) ?></span>
+                    <span class="side-story-meta"><span class="by">By <b><?= h($hs['author_name'] ?? 'Oroma TV') ?></b></span> <span class="dot-sep"></span> <?= h(format_date($hs['created_at'])) ?></span>
                 </span>
             </a>
             <?php endforeach; ?>
@@ -202,7 +202,7 @@ require __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<?php /* ── TRENDING + STAY CONNECTED ── */ if ($trending): $trendTop = $trending[0]; $trendList = array_slice($trending, 1, 5); ?>
+<?php /* ── TRENDING + STAY CONNECTED ── */ if ($trending): $trendTop = $trending[0]; $trendList = array_slice($trending, 1, 4); ?>
 <section class="container section" style="padding-top:0;">
     <div class="trending-layout">
         <div>
