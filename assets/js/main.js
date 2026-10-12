@@ -22,6 +22,47 @@
     if (overlay) overlay.addEventListener('click', closeNav);
     document.addEventListener('keydown', function(e){ if (e.key==='Escape') { closeNav(); closeSearch(); } });
 
+    /* ── categories dropdown (click/tap + Esc; hover & focus are handled in CSS) ── */
+    var dropdowns = Array.prototype.slice.call(document.querySelectorAll('.nav-dd'));
+    function closeDropdowns(except) {
+        dropdowns.forEach(function (wrap) {
+            if (wrap === except) return;
+            wrap.classList.remove('open');
+            var b = wrap.querySelector('.nav-dd-toggle');
+            if (b) b.setAttribute('aria-expanded', 'false');
+        });
+    }
+    dropdowns.forEach(function (wrap) {
+        var btn = wrap.querySelector('.nav-dd-toggle');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = wrap.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            closeDropdowns(wrap);
+        });
+    });
+    document.addEventListener('click', function () { closeDropdowns(null); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDropdowns(null); });
+
+    /* ── top bar: rotate the breaking / latest headlines ── */
+    var topbarHeadlines = document.getElementById('topbarHeadlines');
+    if (topbarHeadlines) {
+        var tbItems = Array.prototype.slice.call(topbarHeadlines.querySelectorAll('a'));
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (tbItems.length > 1 && !reduceMotion) {
+            var tbIndex = 0, tbPaused = false;
+            topbarHeadlines.addEventListener('mouseenter', function () { tbPaused = true; });
+            topbarHeadlines.addEventListener('mouseleave', function () { tbPaused = false; });
+            setInterval(function () {
+                if (tbPaused || document.hidden) return;
+                tbItems[tbIndex].classList.remove('active');
+                tbIndex = (tbIndex + 1) % tbItems.length;
+                tbItems[tbIndex].classList.add('active');
+            }, 5000);
+        }
+    }
+
     /* ── search overlay ── */
     var searchToggle  = document.getElementById('searchToggle');
     var searchOverlay = document.getElementById('searchOverlay');

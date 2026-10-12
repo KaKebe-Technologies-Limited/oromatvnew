@@ -621,6 +621,68 @@ function render_thumb_logo(): string
     return '<img src="' . h(BASE_PATH) . '/img/logo.png" class="thumb-logo" alt="" loading="lazy" />';
 }
 
+/** Oroma TV's official social profiles — single source for header, footer and homepage. */
+function social_links(): array
+{
+    return [
+        'facebook'  => ['label' => 'Facebook',    'icon' => 'fab fa-facebook-f',    'url' => 'https://www.facebook.com/oromatv'],
+        'twitter'   => ['label' => 'X / Twitter', 'icon' => 'fab fa-x-twitter',     'url' => 'https://twitter.com/oromatv'],
+        'instagram' => ['label' => 'Instagram',   'icon' => 'fab fa-instagram',     'url' => 'https://www.instagram.com/oromatv'],
+        'youtube'   => ['label' => 'YouTube',     'icon' => 'fab fa-youtube',       'url' => 'https://www.youtube.com/@oromatv'],
+        'telegram'  => ['label' => 'Telegram',    'icon' => 'fab fa-telegram-plane','url' => 'https://t.me/oromatv'],
+    ];
+}
+
+/**
+ * Stable accent colour for a category (same slug → same colour on every page).
+ * All values pass 4.5:1 contrast on white so they're safe for small label text.
+ */
+function category_color(?string $slug): string
+{
+    static $palette = ['#800000', '#1d4ed8', '#15803d', '#6d28d9', '#c2410c', '#0f766e', '#be185d', '#a16207'];
+    if (!$slug) {
+        return $palette[0];
+    }
+    return $palette[crc32($slug) % count($palette)];
+}
+
+/** Inline style that exposes a category's colour to CSS as --cat. */
+function category_style(?string $slug): string
+{
+    return '--cat:' . category_color($slug);
+}
+
+/**
+ * One story card (image, category, title, meta) — shared by the homepage grid and news.php
+ * so both stay visually identical. $excerptLen = 0 hides the excerpt.
+ */
+function render_story_card(array $a, int $index = 0, int $excerptLen = 0): void
+{
+    $href = BASE_PATH . '/article.php?slug=' . urlencode($a['slug']);
+    $img  = article_thumb_src($a['featured_image'], (int) $a['id'], 480, 300);
+    ?>
+    <a href="<?= h($href) ?>" class="story-card reveal reveal-delay-<?= min($index % 4 + 1, 4) ?>"
+       style="<?= h(category_style($a['category_slug'] ?? null)) ?>">
+        <div class="story-thumb">
+            <img src="<?= h($img) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
+            <?= render_thumb_logo() ?>
+        </div>
+        <div class="story-body">
+            <?php if (!empty($a['category_name'])): ?><span class="story-cat"><?= h($a['category_name']) ?></span><?php endif; ?>
+            <h3 class="story-title"><?= h($a['title']) ?></h3>
+            <?php if ($excerptLen > 0): ?>
+                <p class="story-excerpt"><?= h($a['excerpt'] ?: make_excerpt($a['content'], $excerptLen)) ?></p>
+            <?php endif; ?>
+            <div class="story-meta">
+                <span class="story-author"><?= h($a['author_name'] ?? 'Oroma TV') ?></span>
+                <span class="dot-sep"></span>
+                <span><i class="far fa-calendar"></i> <?= h(format_date($a['created_at'])) ?></span>
+            </div>
+        </div>
+    </a>
+    <?php
+}
+
 /** Get all categories for admin management with article counts. */
 function get_categories_with_counts(): array
 {

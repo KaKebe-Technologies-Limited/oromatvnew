@@ -3,15 +3,15 @@
     <div class="container">
         <div class="newsletter-box reveal">
             <div class="newsletter-text">
-                <i class="fas fa-envelope-open-text"></i>
+                <span class="newsletter-icon"><i class="fas fa-envelope-open-text"></i></span>
                 <div>
-                    <h3>Stay Informed</h3>
-                    <p>Get the latest Oroma TV news delivered to your inbox daily.</p>
+                    <h3>Stay informed with Oroma TV</h3>
+                    <p>Get the latest news, updates and show announcements straight to your inbox.</p>
                 </div>
             </div>
             <form class="newsletter-form" onsubmit="handleNewsletter(event)">
-                <input type="email" placeholder="Your email address" aria-label="Email address" required />
-                <button type="submit" class="btn btn-gold">Subscribe <i class="fas fa-arrow-right"></i></button>
+                <input type="email" placeholder="Enter your email" aria-label="Email address" required />
+                <button type="submit" class="btn btn-primary">Subscribe <i class="fas fa-arrow-right"></i></button>
             </form>
         </div>
     </div>
@@ -21,17 +21,16 @@
 <footer class="site-footer">
     <div class="container">
         <div class="footer-top">
-            <div>
-                <a href="<?= h(BASE_PATH) ?>/index.php" class="footer-brand">
-                    <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
+            <div class="footer-about">
+                <a href="<?= h(BASE_PATH) ?>/index.php" class="footer-brand" aria-label="<?= h(SITE_NAME) ?> — home">
+                    <img src="<?= h(BASE_PATH) ?>/img/logo-trim.png" alt="<?= h(SITE_NAME) ?>" />
                 </a>
                 <p class="footer-tagline">Live TV, radio, and the stories that matter to the Oroma community — streaming free, anywhere in the world.</p>
                 <div class="footer-socials">
-                    <a href="#" class="social-icon" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                    <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="social-icon" aria-label="Twitter / X"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="social-icon" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                    <?php foreach (social_links() as $s): ?>
+                        <a href="<?= h($s['url']) ?>" class="social-icon" target="_blank" rel="noopener noreferrer"
+                           aria-label="<?= h($s['label']) ?>"><i class="<?= h($s['icon']) ?>"></i></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
 
@@ -49,7 +48,7 @@
                 <h4>Categories</h4>
                 <nav>
                     <?php
-                    $footerCats = db()->query("SELECT name,slug FROM categories WHERE is_active=1 ORDER BY display_order ASC LIMIT 6")->fetchAll();
+                    $footerCats = db()->query("SELECT name,slug FROM categories WHERE is_active=1 ORDER BY display_order ASC, name ASC LIMIT 6")->fetchAll();
                     foreach ($footerCats as $fc):
                     ?>
                         <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($fc['slug']) ?>"><?= h($fc['name']) ?></a>
@@ -58,7 +57,7 @@
             </div>
 
             <div class="footer-col">
-                <h4>About</h4>
+                <h4>Company</h4>
                 <nav>
                     <a href="<?= h(BASE_PATH) ?>/contact.php">About Oroma TV</a>
                     <a href="<?= h(BASE_PATH) ?>/contact.php">Contact Us</a>

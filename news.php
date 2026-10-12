@@ -148,30 +148,7 @@ require __DIR__ . '/includes/header.php';
         </div>
     <?php else: ?>
         <div class="news-grid-4">
-            <?php foreach ($articles as $i => $a): ?>
-                <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($a['slug']) ?>"
-                   class="news-card reveal reveal-delay-<?= min($i % 4 + 1, 4) ?>">
-                    <div class="thumb">
-                        <?php $src = article_thumb_src($a['featured_image'], $a['id'], 480, 300); ?>
-                        <img src="<?= h($src) ?>" alt="<?= h($a['title']) ?>" loading="lazy" />
-                        <?= render_thumb_logo() ?>
-                        <?php if ($a['category_name']): ?>
-                            <span class="cat-badge cat-badge-sm"><?= h($a['category_name']) ?></span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="content">
-                        <h3><?= h($a['title']) ?></h3>
-                        <p class="excerpt"><?= h($a['excerpt'] ?: make_excerpt($a['content'], 100)) ?></p>
-                        <div class="card-meta">
-                            <span class="author"><?= h($a['author_name'] ?? 'Oroma TV') ?></span>
-                            <span class="sep">&middot;</span>
-                            <span><?= h(time_ago($a['created_at'])) ?></span>
-                            <span class="sep">&middot;</span>
-                            <span><?= reading_time($a['content']) ?> min</span>
-                        </div>
-                    </div>
-                </a>
-            <?php endforeach; ?>
+            <?php foreach ($articles as $i => $a): render_story_card($a, $i, 100); endforeach; ?>
         </div>
 
         <!-- pagination -->

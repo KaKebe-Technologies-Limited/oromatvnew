@@ -10,7 +10,17 @@ $pageImage       = $pageImage       ?? (SITE_URL . '/img/logo.png');
 $pageCanonical   = $pageCanonical   ?? (SITE_URL . ($_SERVER['REQUEST_URI'] ?? ''));
 $pageType        = $pageType        ?? 'website';
 $streamStatus    = get_setting('stream_status', 'offline');
-$navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is_active=1 ORDER BY display_order ASC, name ASC LIMIT 10")->fetchAll();
+$navCategories   = get_active_categories();
+
+// Top bar: breaking headlines when there are any, otherwise the latest stories.
+$topbarLabel = 'Breaking';
+$topbarItems = get_breaking_news(6);
+if (!$topbarItems) {
+    $topbarLabel = 'Latest';
+    $topbarItems = get_latest_articles(6);
+}
+$categorySlugs = array_column($navCategories, 'slug');
+$inCategoryNav = in_array($activeNav ?? '', $categorySlugs, true) && ($activeNav ?? '') !== 'news';
 ?><!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,9 +43,9 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
     <link rel="icon" href="<?= h(BASE_PATH) ?>/img/logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=2.1.17" />
+    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
     <?= $extraHeadHtml ?? '' ?>
 </head>
 <body class="<?= h($bodyClass ?? '') ?>">
@@ -57,17 +67,41 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
     </div>
 </div>
 
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+    <div class="topbar-inner">
+        <?php if ($topbarItems): ?>
+        <div class="topbar-trending">
+            <span class="topbar-label"><i class="fas fa-bolt"></i> <?= h($topbarLabel) ?></span>
+            <div class="topbar-headlines" id="topbarHeadlines" aria-live="off">
+                <?php foreach ($topbarItems as $i => $t): ?>
+                    <a href="<?= h(BASE_PATH) ?>/article.php?slug=<?= urlencode($t['slug']) ?>"
+                       class="<?= $i === 0 ? 'active' : '' ?>"><?= h($t['title']) ?></a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="topbar-trending"></div>
+        <?php endif; ?>
+
+        <div class="topbar-right">
+            <span class="topbar-date"><i class="far fa-calendar"></i> <?= h(date('M j, Y')) ?></span>
+            <span class="topbar-sep" aria-hidden="true"></span>
+            <span class="topbar-follow">Follow us</span>
+            <?php foreach (social_links() as $s): ?>
+                <a href="<?= h($s['url']) ?>" class="topbar-social" target="_blank" rel="noopener noreferrer"
+                   aria-label="<?= h($s['label']) ?>"><i class="<?= h($s['icon']) ?>"></i></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
 <!-- ── SITE HEADER ── -->
 <header class="site-header" id="siteHeader">
     <div class="inner">
-        <!-- Search -->
-        <button class="nav-search-btn" id="searchToggle" aria-label="Search" title="Search">
-            <i class="fas fa-search"></i>
-        </button>
-
         <!-- Logo -->
-        <a href="<?= h(BASE_PATH) ?>/index.php" class="brand">
-            <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
+        <a href="<?= h(BASE_PATH) ?>/index.php" class="brand" aria-label="<?= h(SITE_NAME) ?> — home">
+            <img src="<?= h(BASE_PATH) ?>/img/logo-trim.png" alt="<?= h(SITE_NAME) ?>" />
         </a>
 
         <!-- Nav -->
@@ -76,17 +110,34 @@ $navCategories   = db()->query("SELECT name, slug, icon FROM categories WHERE is
             <a href="<?= h(BASE_PATH) ?>/news.php"   <?= ($activeNav ?? '') === 'news'  ? 'class="active"' : '' ?>>News</a>
             <a href="<?= h(BASE_PATH) ?>/watch.php"  <?= ($activeNav ?? '') === 'watch' ? 'class="active"' : '' ?>>Watch Live</a>
             <a href="<?= h(BASE_PATH) ?>/previous-shows.php" <?= ($activeNav ?? '') === 'shows' ? 'class="active"' : '' ?>>Previous Shows</a>
+
+            <?php if ($navCategories): ?>
+            <div class="nav-dd<?= $inCategoryNav ? ' has-active' : '' ?>">
+                <button type="button" class="nav-dd-toggle" aria-haspopup="true" aria-expanded="false">
+                    Categories <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="nav-dd-menu">
+                    <?php foreach ($navCategories as $nc): ?>
+                        <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($nc['slug']) ?>"
+                           style="<?= h(category_style($nc['slug'])) ?>"
+                           <?= ($activeNav ?? '') === $nc['slug'] && $nc['slug'] !== 'news' ? 'class="active"' : '' ?>>
+                            <i class="fas <?= h($nc['icon'] ?: 'fa-folder') ?>"></i>
+                            <?= h($nc['name']) ?>
+                        </a>
+                    <?php endforeach; ?>
+                    <a href="<?= h(BASE_PATH) ?>/news.php" class="nav-dd-all">All stories <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <a href="<?= h(BASE_PATH) ?>/contact.php" <?= ($activeNav ?? '') === 'contact' ? 'class="active"' : '' ?>>Contact</a>
-            <?php foreach (array_slice($navCategories, 0, 4) as $nc): ?>
-                <a href="<?= h(BASE_PATH) ?>/news.php?category=<?= urlencode($nc['slug']) ?>"
-                   <?= ($activeNav ?? '') === $nc['slug'] ? 'class="active"' : '' ?>>
-                    <?= h($nc['name']) ?>
-                </a>
-            <?php endforeach; ?>
         </nav>
 
         <!-- Right controls -->
         <div class="header-right">
+            <button class="nav-search-btn" id="searchToggle" aria-label="Search" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
             <a href="<?= h(BASE_PATH) ?>/watch.php"
                class="btn-watch-live <?= $streamStatus === 'live' ? 'is-live' : '' ?>">
                 <span class="dot"></span>
