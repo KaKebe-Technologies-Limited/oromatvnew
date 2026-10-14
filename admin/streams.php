@@ -1,176 +1,102 @@
 <?php
+/**
+ * Streams & Live — the control centre for everything that plays on Oroma TV.
+ *
+ *   Live Control      what is on air right now, scheduled live programmes, and the automation switches
+ *   Channels          the radio stations and extra video channels viewers can pick (shown on the Live tab of the app)
+ *   Off-air Playlist  videos that play on a loop whenever nothing is live
+ *
+ * The tab screens live in admin/includes/streams-{live,channels,playlist}.php; the buttons' logic is in streams-actions.php.
+ */
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/live-functions.php';
 require_login();
+require_once __DIR__ . '/includes/streams-helpers.php';
+require_once __DIR__ . '/includes/streams-actions.php';
+
+$tab = (string) ($_GET['tab'] ?? 'live');
+if (!in_array($tab, ['live', 'channels', 'playlist'], true)) {
+    $tab = 'live';
+}
+$schemaReady = live_schema_ready();
+$errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    require_csrf();
-    $action = $_POST['action'] ?? '';
-
-    if ($action === 'toggle_status') {
-        $current = get_setting('stream_status', 'offline');
-        set_setting('stream_status', $current === 'live' ? 'offline' : 'live');
-        flash('success', 'Stream status updated.');
-        redirect(BASE_PATH . '/admin/streams.php');
+    $needsLiveTables = !in_array($_POST['action'] ?? '', ['save_stream', 'toggle_active', 'stream_default', 'stream_move', 'toggle_status'], true);
+    if ($needsLiveTables && !$schemaReady) {
+        flash('error', 'The live schedule tables are missing and could not be created automatically. Import database/live-schedule.sql in phpMyAdmin, then try again.');
+        redirect(streams_url($tab));
     }
-
-    if ($action === 'save_stream') {
-        $id = (int) ($_POST['id'] ?? 0);
-        $type = in_array($_POST['type'] ?? '', ['youtube', 'radio'], true) ? $_POST['type'] : 'youtube';
-        $name = trim((string) ($_POST['name'] ?? ''));
-        $urlOrId = trim((string) ($_POST['url_or_id'] ?? ''));
-        $icon = trim((string) ($_POST['icon'] ?? '')) ?: null;
-        $isDefault = isset($_POST['is_default']) ? 1 : 0;
-
-        if ($name === '' || $urlOrId === '') {
-            flash('error', 'Name and URL / Video ID are required.');
-            redirect(BASE_PATH . '/admin/streams.php');
-        }
-
-        if ($isDefault) {
-            db()->prepare('UPDATE streams SET is_default = 0 WHERE type = ?')->execute([$type]);
-        }
-
-        if ($id > 0) {
-            $stmt = db()->prepare('UPDATE streams SET type=?, name=?, url_or_id=?, icon=?, is_default=? WHERE id=?');
-            $stmt->execute([$type, $name, $urlOrId, $icon, $isDefault, $id]);
-            flash('success', 'Stream updated.');
-        } else {
-            $maxOrder = (int) db()->query('SELECT COALESCE(MAX(sort_order), 0) AS m FROM streams')->fetch()['m'];
-            $stmt = db()->prepare('INSERT INTO streams (type, name, url_or_id, icon, is_default, sort_order) VALUES (?,?,?,?,?,?)');
-            $stmt->execute([$type, $name, $urlOrId, $icon, $isDefault, $maxOrder + 1]);
-            flash('success', 'Stream added.');
-        }
-        redirect(BASE_PATH . '/admin/streams.php');
-    }
-
-    if ($action === 'toggle_active') {
-        $id = (int) ($_POST['id'] ?? 0);
-        db()->prepare('UPDATE streams SET is_active = 1 - is_active WHERE id = ?')->execute([$id]);
-        redirect(BASE_PATH . '/admin/streams.php');
-    }
+    $result = streams_handle_post(); // redirects when it succeeds; returns the form mistakes otherwise
+    $tab = $result['tab'];
+    $errors = $result['errors'];
 }
 
-$editStream = null;
-if (!empty($_GET['edit'])) {
-    $stmt = db()->prepare('SELECT * FROM streams WHERE id = ?');
-    $stmt->execute([(int) $_GET['edit']]);
-    $editStream = $stmt->fetch();
-}
+$counts = [
+    'channels' => (int) db()->query('SELECT COUNT(*) AS c FROM streams')->fetch()['c'],
+    'playlist' => $schemaReady ? (int) db()->query('SELECT COUNT(*) AS c FROM offair_items')->fetch()['c'] : 0,
+    'upcoming' => $schemaReady ? (int) db()->query("SELECT COUNT(*) AS c FROM live_programs WHERE starts_at > '" . date('Y-m-d H:i:s') . "' AND ended_at IS NULL")->fetch()['c'] : 0,
+];
 
-$streams = db()->query('SELECT * FROM streams ORDER BY type, sort_order, id')->fetchAll();
-$streamStatus = get_setting('stream_status', 'offline');
-
-$pageTitle = 'Streams';
+$pageTitle = 'Streams & Live';
 $activeAdminNav = 'streams';
 require __DIR__ . '/includes/admin-header.php';
 ?>
 
-<div class="card">
-    <div class="card-head">
-        <h2>Live Status</h2>
+<?php if (!$schemaReady): ?>
+    <div class="alert" style="margin-bottom:18px;">
+        <strong>The live schedule tables are not set up yet.</strong>
+        They are normally created automatically; this database user is not allowed to. Import
+        <code>database/live-schedule.sql</code> in phpMyAdmin and reload this page. Channels still work meanwhile.
     </div>
-    <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px;">
-        Controls the Live / Offline badge shown across the public site.
-    </p>
-    <form method="post">
-        <?= csrf_field() ?>
-        <input type="hidden" name="action" value="toggle_status" />
-        <?php if ($streamStatus === 'live'): ?>
-            <span class="status-pill status-published" style="margin-right:12px;"><i class="fas fa-circle"></i> LIVE</span>
-        <?php else: ?>
-            <span class="status-pill status-editor" style="margin-right:12px;">OFFLINE</span>
-        <?php endif; ?>
-        <button type="submit" class="btn btn-outline btn-sm">
-            Switch to <?= $streamStatus === 'live' ? 'Offline' : 'Live' ?>
-        </button>
-    </form>
+<?php endif; ?>
+
+<?php if ($errors): ?>
+    <div class="alert" style="margin-bottom:18px;">
+        <?php foreach ($errors as $error): ?><div><i class="fas fa-circle-exclamation"></i> <?= h($error) ?></div><?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<div class="tabs-bar" role="tablist">
+    <a class="tab-link <?= $tab === 'live' ? 'active' : '' ?>" href="<?= h(streams_url('live')) ?>"><i class="fas fa-tower-broadcast"></i> Live Control
+        <?php if ($counts['upcoming']): ?><span class="count"><?= $counts['upcoming'] ?> upcoming</span><?php endif; ?></a>
+    <a class="tab-link <?= $tab === 'channels' ? 'active' : '' ?>" href="<?= h(streams_url('channels')) ?>"><i class="fas fa-satellite-dish"></i> Channels <span class="count"><?= $counts['channels'] ?></span></a>
+    <a class="tab-link <?= $tab === 'playlist' ? 'active' : '' ?>" href="<?= h(streams_url('playlist')) ?>"><i class="fas fa-list-ul"></i> Off-air Playlist <span class="count"><?= $counts['playlist'] ?></span></a>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1.4fr;gap:22px;align-items:start;">
-    <div class="card">
-        <div class="card-head"><h2><?= $editStream ? 'Edit Stream' : 'Add Stream' ?></h2></div>
-        <form method="post">
-            <?= csrf_field() ?>
-            <input type="hidden" name="action" value="save_stream" />
-            <input type="hidden" name="id" value="<?= (int) ($editStream['id'] ?? 0) ?>" />
+<?php require __DIR__ . '/includes/streams-' . $tab . '.php'; ?>
 
-            <div class="form-group">
-                <label for="type">Type</label>
-                <select class="form-control" id="type" name="type">
-                    <option value="youtube" <?= ($editStream['type'] ?? 'youtube') === 'youtube' ? 'selected' : '' ?>>YouTube</option>
-                    <option value="radio" <?= ($editStream['type'] ?? '') === 'radio' ? 'selected' : '' ?>>Radio (Radio Garden embed)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input class="form-control" type="text" id="name" name="name" required
-                       value="<?= h($editStream['name'] ?? '') ?>" placeholder="e.g. Oroma TV" />
-            </div>
-            <div class="form-group">
-                <label for="url_or_id">YouTube URL / Video ID, or Radio Garden embed URL</label>
-                <input class="form-control" type="text" id="url_or_id" name="url_or_id" required
-                       value="<?= h($editStream['url_or_id'] ?? '') ?>" placeholder="https://youtube.com/watch?v=… or https://radio.garden/embed/…" />
-            </div>
-            <div class="form-group">
-                <label for="icon">Icon (Font Awesome class, optional)</label>
-                <input class="form-control" type="text" id="icon" name="icon"
-                       value="<?= h($editStream['icon'] ?? '') ?>" placeholder="fas fa-tv" />
-            </div>
-            <div class="form-group">
-                <label class="toggle-switch">
-                    <input type="checkbox" name="is_default" value="1" <?= !empty($editStream['is_default']) ? 'checked' : '' ?> />
-                    Default (loads first for this type)
-                </label>
-            </div>
-            <div style="display:flex;gap:8px;">
-                <button type="submit" class="btn btn-primary"><?= $editStream ? 'Update' : 'Add' ?> Stream</button>
-                <?php if ($editStream): ?>
-                    <a href="<?= h(BASE_PATH) ?>/admin/streams.php" class="btn btn-outline">Cancel</a>
-                <?php endif; ?>
-            </div>
-        </form>
-    </div>
-
-    <div class="card">
-        <div class="card-head"><h2>All Streams</h2></div>
-        <div style="overflow-x:auto;">
-        <table class="data-table">
-            <thead><tr><th>Type</th><th>Name</th><th>URL / ID</th><th>Default</th><th>Active</th><th></th></tr></thead>
-            <tbody>
-            <?php if (!$streams): ?>
-                <tr class="empty-row"><td colspan="6">No streams configured yet — add one on the left.</td></tr>
-            <?php else: foreach ($streams as $s): ?>
-                <tr>
-                    <td><i class="<?= $s['type'] === 'youtube' ? 'fab fa-youtube' : 'fas fa-broadcast-tower' ?>"></i> <?= h(ucfirst($s['type'])) ?></td>
-                    <td><?= h($s['name']) ?></td>
-                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= h($s['url_or_id']) ?></td>
-                    <td><?= $s['is_default'] ? '<i class="fas fa-star" style="color:var(--gold);"></i>' : '' ?></td>
-                    <td>
-                        <form method="post" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="action" value="toggle_active" />
-                            <input type="hidden" name="id" value="<?= (int) $s['id'] ?>" />
-                            <button type="submit" class="status-pill <?= $s['is_active'] ? 'status-published' : 'status-editor' ?>" style="border:none;cursor:pointer;">
-                                <?= $s['is_active'] ? 'Active' : 'Inactive' ?>
-                            </button>
-                        </form>
-                    </td>
-                    <td>
-                        <div class="row-actions">
-                            <a href="<?= h(BASE_PATH) ?>/admin/streams.php?edit=<?= (int) $s['id'] ?>" class="icon-btn"><i class="fas fa-pen"></i></a>
-                            <form method="post" action="<?= h(BASE_PATH) ?>/admin/stream-delete.php" data-confirm="Delete stream “<?= h($s['name']) ?>”?">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= (int) $s['id'] ?>" />
-                                <button type="submit" class="icon-btn"><i class="fas fa-trash"></i></button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            <?php endforeach; endif; ?>
-            </tbody>
-        </table>
-        </div>
+<!-- Preview window: any button with data-preview="<player address>" opens it. -->
+<div class="preview-backdrop" id="previewBackdrop" aria-hidden="true">
+    <div class="preview-box" role="dialog" aria-modal="true" aria-label="Preview">
+        <div class="bar"><span id="previewTitle">Preview</span><button type="button" id="previewClose" aria-label="Close preview"><i class="fas fa-xmark"></i></button></div>
+        <div class="frame" id="previewFrame"></div>
     </div>
 </div>
+<script>
+(function () {
+    var backdrop = document.getElementById('previewBackdrop');
+    var frame = document.getElementById('previewFrame');
+    var title = document.getElementById('previewTitle');
+    function close() { backdrop.classList.remove('open'); frame.innerHTML = ''; }
+    document.addEventListener('click', function (e) {
+        var open = e.target.closest('[data-preview]');
+        if (open) {
+            e.preventDefault();
+            title.textContent = open.getAttribute('data-title') || 'Preview';
+            frame.innerHTML = '';
+            var iframe = document.createElement('iframe');
+            iframe.src = open.getAttribute('data-preview');
+            iframe.allow = 'autoplay; encrypted-media; fullscreen';
+            iframe.setAttribute('allowfullscreen', '');
+            frame.appendChild(iframe);
+            backdrop.classList.add('open');
+            return;
+        }
+        if (e.target === backdrop || e.target.closest('#previewClose')) close();
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
 
 <?php require __DIR__ . '/includes/admin-footer.php'; ?>

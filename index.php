@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/live-functions.php';
 
 $activeNav  = 'home';
 $bodyClass  = 'is-home';
@@ -57,7 +58,7 @@ $heroSlides   = array_slice($featured, 0, 3);
 $heroSide     = array_slice($featured, 3, 3);
 $quickStories = array_slice($featured, 6, 4);
 
-$streamStatus = get_setting('stream_status', 'offline');
+$streamStatus = live_is_on_air() ? 'live' : 'offline';
 $isLive       = $streamStatus === 'live';
 
 require __DIR__ . '/includes/header.php';

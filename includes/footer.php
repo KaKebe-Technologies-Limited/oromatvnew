@@ -85,5 +85,9 @@
 </button>
 
 <script src="<?= h(BASE_PATH) ?>/assets/js/main.js?v=<?= filemtime(__DIR__ . '/../assets/js/main.js') ?>"></script>
+<?php if (!empty($radioOn)): ?>
+<script src="<?= h(BASE_PATH) ?>/assets/js/radio.js?v=<?= filemtime(__DIR__ . '/../assets/js/radio.js') ?>"></script>
+<?php endif; ?>
+<?= $extraFootHtml ?? '' ?>
 </body>
 </html>

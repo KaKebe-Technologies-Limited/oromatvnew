@@ -6,14 +6,24 @@
 // 1. ENVIRONMENT DETECTION
 // ================================================
 
+// A phone testing the mobile app reaches this PC by its home-network address (e.g. 192.168.0.103), not "localhost".
+// Treat that as local too — but only when the request really comes from inside the private network, so a
+// forged Host header from the internet can never switch a live site into local mode.
+$__hostOnly   = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? ''));
+$__isPrivate  = static fn(string $ip): bool => filter_var($ip, FILTER_VALIDATE_IP) !== false
+    && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+$__lanRequest = $__isPrivate($__hostOnly) && $__isPrivate($_SERVER['REMOTE_ADDR'] ?? '');
+
 // Check if we're running on localhost
 $is_local = (
     $_SERVER['SERVER_NAME'] === 'localhost' ||
     $_SERVER['SERVER_NAME'] === '127.0.0.1' ||
     strpos($_SERVER['SERVER_NAME'], 'localhost') !== false ||
     strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false
+    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false ||
+    $__lanRequest
 );
+unset($__hostOnly, $__isPrivate, $__lanRequest);
 
 // Or set manually for debugging (override detection)
 // $is_local = true;  // Uncomment to force local mode
@@ -45,6 +55,16 @@ if ($is_local) {
 define('SITE_NAME', 'Oroma TV');
 define('SITE_TAGLINE', 'Dwon me Tumalo');
 define('SITE_EMAIL', 'info@oromatv.com');  // Add your contact email
+
+// The public address of the live website (used for share links and as the page origin the live player expects).
+define('OROMA_PUBLIC_URL', 'https://oromatv.com');
+
+// The live-TV player. Used by watch.php and by the mobile app's API (api/v1/live), so changing the stream here
+// changes it on the website and in the app. Any embeddable player address works (YouTube, Dacast, ...).
+// Currently: https://youtu.be/9pIBgyHzzBA  (to use a different YouTube broadcast, swap the video id after /embed/).
+define('OROMA_LIVE_EMBED_URL', 'https://www.youtube.com/embed/9pIBgyHzzBA?rel=0&modestbranding=1&playsinline=1');
+// Previous live player, kept so you can switch back by pasting it into the line above:
+// 'https://iframe.dacast.com/live/fcdd965b-4244-ed60-8f9f-0a249792f9dc/fd9a7722-2b54-4def-b040-e1887cff2325'
 
 // ================================================
 // 4. BASE PATH & URL (Auto-detected)

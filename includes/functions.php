@@ -605,14 +605,35 @@ function article_thumb_src(?string $featuredImage, int $seed, int $w = 640, int 
     if ($featuredImage && trim($featuredImage) !== '') {
         // Normalise path — strip any stale base-path prefix before /uploads/
         $clean = preg_replace('#^.*/uploads/#', '/uploads/', $featuredImage);
-        // Only trust the stored path if the file is actually on disk — on local
-        // dev the production /uploads files usually aren't synced, so this
-        // falls back to a placeholder instead of a broken <img>.
+        // Only trust the stored path if the file is actually on disk.
         if (is_file(dirname(__DIR__) . '/' . ltrim($clean, '/'))) {
             return rtrim(BASE_PATH, '/') . '/' . ltrim($clean, '/');
         }
+        // On a developer's machine the production /uploads files are not synced: show the live site's copy of the real
+        // photo. (On the live server a missing file still falls through to the placeholder below.)
+        if ($live = live_media_fallback($clean)) {
+            return $live;
+        }
     }
     return placeholder_image($seed, $w, $h);
+}
+
+/**
+ * On a developer's machine (not the live server) an upload that is missing from the local /uploads folder can be
+ * loaded from the live website instead, so the real article photos show up without copying gigabytes of files.
+ * Returns the live site's address for the file, or null when there is nothing to fall back to
+ * (live server, or the file exists locally).
+ */
+function live_media_fallback(string $uploadPath): ?string
+{
+    global $is_local;
+    if (empty($is_local) || !defined('OROMA_PUBLIC_URL') || $uploadPath === '') {
+        return null;
+    }
+    if (is_file(dirname(__DIR__) . '/' . ltrim($uploadPath, '/'))) {
+        return null;
+    }
+    return rtrim(OROMA_PUBLIC_URL, '/') . '/' . ltrim($uploadPath, '/');
 }
 
 /** Small Oroma TV logo badge for thumbnail corners — uses the main logo. */
@@ -707,6 +728,10 @@ function img_url(string $path): string
     if (preg_match('#^https?://#i', $path)) return $path;
     // Strip any stale base-path prefix before /uploads/ so we always re-prefix cleanly
     $path = preg_replace('#^.*/uploads/#', '/uploads/', $path);
+    // Local development: use the live site's copy of an upload that is not on this machine (see live_media_fallback()).
+    if (str_starts_with($path, '/uploads/') && ($live = live_media_fallback($path))) {
+        return $live;
+    }
     return rtrim(BASE_PATH, '/') . '/' . ltrim($path, '/');
 }
 

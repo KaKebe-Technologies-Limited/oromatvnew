@@ -3,14 +3,18 @@
  * Shared public-site header.
  */
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/live-functions.php';
+require_once __DIR__ . '/radio-functions.php';
 
-$pageTitle       = $pageTitle       ?? SITE_NAME . ' · Live Stream & News';
+$pageTitle      = $pageTitle       ?? SITE_NAME . ' · Live Stream & News';
 $pageDescription = $pageDescription ?? 'Watch ' . SITE_NAME . ' live, listen to the radio, and read the latest news.';
 $pageImage       = $pageImage       ?? (SITE_URL . '/img/logo.png');
 $pageCanonical   = $pageCanonical   ?? (SITE_URL . ($_SERVER['REQUEST_URI'] ?? ''));
 $pageType        = $pageType        ?? 'website';
-$streamStatus    = get_setting('stream_status', 'offline');
+$streamStatus    = live_is_on_air() ? 'live' : 'offline'; // a running scheduled programme, or the main-channel switch
 $navCategories   = get_active_categories();
+$radioLink       = radio_source_link();
+$radioOn         = $radioLink !== '' && radio_parse_source($radioLink) !== null; // show "Listen to Q FM" only when a station is set up
 
 // Top bar: breaking headlines when there are any, otherwise the latest stories.
 $topbarLabel = 'Breaking';
@@ -46,6 +50,7 @@ $inCategoryNav = in_array($activeNav ?? '', $categorySlugs, true) && ($activeNav
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" />
+    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/live.css?v=<?= filemtime(__DIR__ . '/../assets/css/live.css') ?>" />
     <?= $extraHeadHtml ?? '' ?>
 </head>
 <body class="<?= h($bodyClass ?? '') ?>">
@@ -85,6 +90,13 @@ $inCategoryNav = in_array($activeNav ?? '', $categorySlugs, true) && ($activeNav
         <?php endif; ?>
 
         <div class="topbar-right">
+            <?php if ($radioOn): ?>
+                <button type="button" class="qfm-btn" data-qfm data-api="<?= h(BASE_PATH) ?>/api/v1" data-label="Listen to Q FM" aria-pressed="false">
+                    <span class="qfm-btn-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="qfm-btn-label">Listen to Q FM</span>
+                </button>
+                <span class="topbar-sep" aria-hidden="true"></span>
+            <?php endif; ?>
             <span class="topbar-date"><i class="far fa-calendar"></i> <?= h(date('M j, Y')) ?></span>
             <span class="topbar-sep" aria-hidden="true"></span>
             <span class="topbar-follow">Follow us</span>

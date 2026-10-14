@@ -1,0 +1,10 @@
+# Oroma TV mobile API — send every request that is not a real file to the front controller.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+
+# The helper files only define functions; they must never be requested directly.
+<FilesMatch "^(bootstrap|routes)\.php$">
+    Require all denied
+</FilesMatch>

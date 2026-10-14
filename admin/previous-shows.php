@@ -73,6 +73,7 @@ require __DIR__ . '/includes/admin-header.php';
             <td>
                 <div style="font-weight:600;font-size:13.5px;max-width:340px;white-space:normal;line-height:1.35;">
                     <?= h($s['title']) ?>
+                    <?php if (($s['kind'] ?? 'show') === 'movie'): ?><span class="badge-src" style="margin-left:6px;">🎬 Movie</span><?php endif; ?>
                 </div>
                 <?php if ($s['guest_name']): ?>
                     <div style="color:var(--maroon);font-size:12px;margin-top:3px;">

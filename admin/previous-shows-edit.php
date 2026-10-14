@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/previous-shows-functions.php';
+require_once __DIR__ . '/../includes/live-functions.php';
 require_login();
+ensure_live_schema();
 
 $id   = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $stmt = db()->prepare('SELECT * FROM previous_shows WHERE id=?');
@@ -40,6 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $description ?: null,
         $id,
     ]);
+    ensure_live_schema(); // makes sure the "kind" column exists
+    try {
+        db()->prepare('UPDATE previous_shows SET kind=? WHERE id=?')->execute([($_POST['kind'] ?? 'show') === 'movie' ? 'movie' : 'show', $id]);
+    } catch (Throwable $e) {
+        error_log('[previous-shows] kind: ' . $e->getMessage());
+    }
     flash('success', 'Show updated.');
     redirect(BASE_PATH . '/admin/previous-shows.php');
 }
@@ -106,6 +114,15 @@ require __DIR__ . '/includes/admin-header.php';
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $id ?>" />
             <input type="hidden" name="action" value="save" />
+
+            <div class="form-group">
+                <label for="kind">What is it?</label>
+                <select class="form-control" id="kind" name="kind">
+                    <option value="show" <?= ($show['kind'] ?? 'show') === 'show' ? 'selected' : '' ?>>Show / episode</option>
+                    <option value="movie" <?= ($show['kind'] ?? '') === 'movie' ? 'selected' : '' ?>>🎬 Movie</option>
+                </select>
+                <div class="form-hint">Movies get their own row on the Previous Shows page and in the app.</div>
+            </div>
 
             <div class="form-group">
                 <label for="guest_name">Guest Name</label>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/previous-shows-functions.php';
+require_once __DIR__ . '/../includes/live-functions.php';
 require_login();
 
 $preview  = null;
@@ -33,7 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 // save
                 try {
-                    $newId = add_previous_show($url);
+                    ensure_live_schema();
+                    $newId = add_previous_show($url, ($_POST['kind'] ?? 'show') === 'movie' ? 'movie' : 'show');
                     flash('success', 'Show added successfully.');
                     redirect(BASE_PATH . '/admin/previous-shows.php');
                 } catch (RuntimeException $e) {
@@ -82,6 +84,15 @@ require __DIR__ . '/includes/admin-header.php';
             </div>
         </div>
 
+        <div class="form-group">
+            <label for="kind">What is it?</label>
+            <select class="form-control" id="kind" name="kind" style="max-width:280px;">
+                <option value="show" <?= ($_POST['kind'] ?? 'show') === 'show' ? 'selected' : '' ?>>Show / episode</option>
+                <option value="movie" <?= ($_POST['kind'] ?? '') === 'movie' ? 'selected' : '' ?>>🎬 Movie</option>
+            </select>
+            <div class="form-hint">Movies get their own row on the Previous Shows page and in the app.</div>
+        </div>
+
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button type="submit" name="action" value="preview" class="btn btn-outline">
                 <i class="fas fa-eye"></i> Preview
@@ -126,6 +137,7 @@ require __DIR__ . '/includes/admin-header.php';
                     <form method="post">
                         <?= csrf_field() ?>
                         <input type="hidden" name="youtube_url" value="<?= h($lastUrl) ?>" />
+                        <input type="hidden" name="kind" value="<?= h(($_POST['kind'] ?? 'show') === 'movie' ? 'movie' : 'show') ?>" />
                         <button type="submit" name="action" value="save" class="btn btn-primary btn-sm">
                             <i class="fas fa-check"></i> Confirm &amp; Save
                         </button>

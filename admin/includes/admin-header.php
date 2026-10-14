@@ -23,7 +23,7 @@ function admin_nav_class(string $key, string $active): string
     <link rel="icon" href="<?= h(BASE_PATH) ?>/img/logo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/admin.css" />
+    <link rel="stylesheet" href="<?= h(BASE_PATH) ?>/assets/css/admin.css?v=<?= filemtime(__DIR__ . '/../../assets/css/admin.css') ?>" />
 </head>
 <body>
 
@@ -42,7 +42,7 @@ function admin_nav_class(string $key, string $active): string
             <span><i class="fas fa-comments"></i> Comments</span>
             <?php if ($pendingCommentCount > 0): ?><span class="nav-badge"><?= $pendingCommentCount ?></span><?php endif; ?>
         </a>
-        <a href="<?= h(BASE_PATH) ?>/admin/streams.php" class="<?= admin_nav_class('streams', $activeAdminNav) ?>"><i class="fas fa-satellite-dish"></i> Streams</a>
+        <a href="<?= h(BASE_PATH) ?>/admin/streams.php" class="<?= admin_nav_class('streams', $activeAdminNav) ?>"><i class="fas fa-satellite-dish"></i> Streams &amp; Live</a>
         <a href="<?= h(BASE_PATH) ?>/admin/previous-shows.php" class="<?= admin_nav_class('shows', $activeAdminNav) ?>"><i class="fab fa-youtube"></i> Previous Shows</a>
         <?php if ($user['role'] === 'admin'): ?>
             <a href="<?= h(BASE_PATH) ?>/admin/users.php"    class="<?= admin_nav_class('users',    $activeAdminNav) ?>"><i class="fas fa-users"></i> Users</a>

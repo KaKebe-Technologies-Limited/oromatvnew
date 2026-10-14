@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "Oroma TV",
+    "slug": "oromatv",
+    "version": "1.0.0",
+    "orientation": "default",
+    "scheme": "oromatv",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tech.kakebe.oromatv"
+    },
+    "android": {
+      "package": "tech.kakebe.oromatv",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-status-bar",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false
+        }
+      ],
+      "expo-asset",
+      "expo-web-browser",
+      "expo-image"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": {
+        "development": "http://192.168.0.103/oromatvnew/api",
+        "staging": "https://oromatv.com/api",
+        "production": "https://oromatv.com/api"
+      },
+      "router": {},
+      "eas": {
+        "projectId": "5251c0a8-ea2b-4239-8f37-28631109b89a"
+      }
+    },
+    "owner": "sedrickotolo"
+  }
+}

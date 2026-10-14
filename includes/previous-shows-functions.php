@@ -117,7 +117,7 @@ function extract_guest_name(string $title): string
  * Fetch metadata and insert a new show.
  * Returns the new row id on success, or throws on error.
  */
-function add_previous_show(string $youtubeUrl): int
+function add_previous_show(string $youtubeUrl, string $kind = 'show'): int
 {
     $youtubeUrl = trim($youtubeUrl);
     $meta = fetch_youtube_metadata($youtubeUrl);
@@ -146,7 +146,15 @@ function add_previous_show(string $youtubeUrl): int
         $meta['upload_date'],
         (int)$maxOrder,
     ]);
-    return (int)db()->lastInsertId();
+    $newId = (int)db()->lastInsertId();
+    if ($kind === 'movie') { // movies share the table; the "kind" column is created by ensure_live_schema()
+        try {
+            db()->prepare("UPDATE previous_shows SET kind = 'movie' WHERE id = ?")->execute([$newId]);
+        } catch (Throwable $e) {
+            error_log('[previous-shows] kind: ' . $e->getMessage());
+        }
+    }
+    return $newId;
 }
 
 /** Re-fetch YouTube metadata and update a show row. */
