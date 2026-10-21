@@ -41,6 +41,12 @@ async function configure() {
 
 function onStatus(status) {
   if (userStopped) return;
+  // The station could not be reached or the stream broke: say so plainly instead of showing a silent "Paused" bar.
+  if (status.error) {
+    stopRadio();
+    set({ error: 'The Q FM stream is not reachable right now. Please try again in a little while.' });
+    return;
+  }
   if (status.playing) {
     clearTimeout(watchdog);
     if (snapshot.phase !== 'playing') set({ phase: 'playing', error: null });
