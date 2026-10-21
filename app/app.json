@@ -2,7 +2,7 @@
   "expo": {
     "name": "Oroma TV",
     "slug": "oromatv",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "default",
     "scheme": "oromatv",
     "userInterfaceStyle": "light",
@@ -15,7 +15,11 @@
       "bundleIdentifier": "tech.kakebe.oromatv"
     },
     "android": {
-      "package": "tech.kakebe.oromatv",
+      "package": "com.tvoroma.app.com",
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -42,7 +46,8 @@
       [
         "expo-audio",
         {
-          "microphonePermission": false
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ],
       "expo-asset",

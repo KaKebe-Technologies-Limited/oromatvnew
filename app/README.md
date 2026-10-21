@@ -92,10 +92,20 @@ eas build -p android --profile local-wifi   # test APK pointing at your PC over 
 eas build -p android --profile production   # Play Store bundle
 ```
 
-Before the first store build, check `ios.bundleIdentifier` / `android.package` (`tech.kakebe.oromatv`) in `app.json` —
-they cannot be changed after publishing.
+`android.package` is `com.tvoroma.app.com` — the package of the app already on Google Play, so a new build **replaces** it
+(it must also be signed with the same upload key and have a higher version code). `ios.bundleIdentifier` is
+`tech.kakebe.oromatv`. Neither can be changed after publishing.
 
 **The API must be on the live server first:** upload the `api/`, `includes/`, `admin/` and `assets/` folders and the top-level pages (`config.php`, `index.php`, `watch.php`, `show.php`, `previous-shows.php`), then open `https://oromatv.com/api/ping` — it should answer `{"status":"ok"…}`.
+
+## Publishing to Google Play
+
+1. `eas build -p android --profile production` makes the **.aab** Play needs (the APK profiles are for testing). EAS holds the signing key (the *upload key*); back it up with `eas credentials`.
+2. Play Console → **Create app** (`Oroma TV`, App, Free). Complete the *App content* tasks: privacy policy URL (a real page on oromatv.com), app access (nothing needs a login), ads (none), content rating, target audience (not for children), news-app declaration, **Data safety**, and the **foreground service** declaration (media playback — Q FM keeps playing with the screen locked).
+3. Store listing: 512×512 icon, 1024×500 feature graphic, at least 2 phone screenshots, short (≤80) and full descriptions, category, contact email.
+4. Upload the .aab the first time by hand (Testing → Internal testing → Create release), accept **Play App Signing**, test from the Play opt-in link. Later releases can use `eas submit -p android`.
+5. A personal developer account created after Nov 2023 must first run a **closed test with 12+ testers for 14 days** before Production can be requested (Dashboard says if this applies).
+6. Android permissions are kept to a minimum in `app.json` (internet, audio settings, media-playback service; the microphone and storage permissions are switched off). Comments are user-generated content: Play expects a way to report them and moderation.
 
 ## Notes and limits
 
