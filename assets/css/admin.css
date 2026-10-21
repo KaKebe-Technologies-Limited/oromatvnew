@@ -635,3 +635,13 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .radio-result .ok { color: #2e7d32; font-weight: 700; }
 .radio-result .bad { color: #c0392b; font-weight: 700; }
 .radio-result code { word-break: break-all; font-size: 12px; }
+
+/* ---- import from a link ---- */
+.mode-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .mode-choice { grid-template-columns: minmax(0, 1fr); } }
+.mode-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; background: var(--card-bg); transition: border-color .15s, background .15s; font-weight: 400; }
+.mode-card:hover { border-color: var(--maroon); }
+.mode-card:has(input:checked) { border-color: var(--maroon); background: rgba(128, 0, 0, 0.08); }
+.mode-card input { margin-top: 4px; accent-color: var(--maroon); flex-shrink: 0; }
+.mode-card span { font-size: 13px; line-height: 1.55; color: var(--text-muted); }
+.mode-card strong { display: block; font-size: 14.5px; color: var(--text); margin-bottom: 2px; }

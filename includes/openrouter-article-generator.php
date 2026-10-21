@@ -180,6 +180,9 @@ class OromaTV_AI_Content_Generator
             ],
             'response_format' => ['type' => 'json_object'],
             'temperature' => 0.6,
+            // A news piece needs ~2,000 tokens. Without a cap OpenRouter reserves the model's maximum (65,535) against the
+            // account balance and refuses the request when the balance is low ("can only afford 27048").
+            'max_tokens' => 6000,
         ];
 
         $ch = curl_init($this->apiUrl);
