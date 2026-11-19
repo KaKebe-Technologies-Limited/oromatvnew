@@ -251,6 +251,16 @@ function render_side_feature_card(array $a): void
                                         <span><?= h(time_ago($c['created_at'])) ?></span>
                                     </div>
                                     <p class="comment-text"><?= nl2br(h($c['comment'])) ?></p>
+                                    <div class="comment-actions">
+                                        <button type="button" class="comment-report-btn" data-comment-id="<?= (int) $c['id'] ?>" aria-expanded="false"><i class="fas fa-flag"></i> Report</button>
+                                        <span class="comment-report-menu" hidden>
+                                            <button type="button" data-reason="spam">Spam</button>
+                                            <button type="button" data-reason="abusive">Abusive or hateful</button>
+                                            <button type="button" data-reason="misleading">Misleading</button>
+                                            <button type="button" data-reason="other">Other</button>
+                                        </span>
+                                        <span class="comment-report-done" role="status" hidden></span>
+                                    </div>
                                 </div>
                             </li>
                         <?php endforeach; ?>
@@ -270,9 +280,42 @@ function render_side_feature_card(array $a): void
                         <input class="form-control" type="email" name="email" placeholder="Email (optional, not published)" maxlength="150" />
                     </div>
                     <textarea class="form-control" name="comment" rows="4" placeholder="Join the conversation…" maxlength="2000" required></textarea>
+                    <label class="comment-terms"><input type="checkbox" name="accept_terms" value="1" required /> <span>I agree to the <a href="<?= h(BASE_PATH) ?>/terms.php" target="_blank" rel="noopener">Terms of Use</a>. We have no tolerance for objectionable content or abusive users.</span></label>
                     <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Post Comment</button>
-                    <p class="form-hint">Comments appear immediately after posting.</p>
+                    <p class="form-hint">Comments are checked automatically, and some are reviewed by our team before they appear. Your email address is optional and never shown; see our <a href="<?= h(BASE_PATH) ?>/privacy.php" target="_blank" rel="noopener">Privacy Policy</a>. Use <strong>Report</strong> on any comment you find abusive. We aim to review reports within 24 hours.</p>
                 </form>
+                <script>
+                (function () {
+                    // Report a comment: choose a reason, send it to the API, say thank you. Nothing about the reporter is shown to anyone.
+                    var api = <?= json_encode(rtrim(BASE_PATH, '/') . '/api/v1') ?>;
+                    document.querySelectorAll('.comment-actions').forEach(function (box) {
+                        var btn = box.querySelector('.comment-report-btn'), menu = box.querySelector('.comment-report-menu'), done = box.querySelector('.comment-report-done');
+                        btn.addEventListener('click', function () {
+                            var open = menu.hidden;
+                            menu.hidden = !open;
+                            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                        });
+                        menu.querySelectorAll('button').forEach(function (b) {
+                            b.addEventListener('click', function () {
+                                menu.hidden = true;
+                                btn.hidden = true;
+                                fetch(api + '/comments/' + btn.getAttribute('data-comment-id') + '/report', {
+                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ reason: b.getAttribute('data-reason'), platform: 'web' })
+                                }).then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
+                                  .then(function (res) {
+                                      var gone = res.s === 404 && res.j && res.j.code === 'comment_gone';
+                                      done.textContent = gone ? 'This comment is no longer available.' : ((res.j && res.j.message) || (res.s < 400 ? 'Thank you. We aim to review reports within 24 hours.' : 'Could not send your report. Please try again.'));
+                                      done.hidden = false;
+                                      if (res.j && res.j.data && res.j.data.hidden) { box.closest('.comment-item').style.opacity = '.45'; }
+                                      if (res.s >= 400 && !gone) { btn.hidden = false; }
+                                  })
+                                  .catch(function () { done.textContent = 'Could not send your report. Please try again, or email <?= h(SITE_EMAIL) ?>.'; done.hidden = false; btn.hidden = false; });
+                            });
+                        });
+                    });
+                })();
+                </script>
             </div>
         </div>
 

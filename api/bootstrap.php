@@ -13,6 +13,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/previous-shows-functions.php';
 require_once __DIR__ . '/../includes/live-functions.php';
 require_once __DIR__ . '/../includes/radio-functions.php';
+require_once __DIR__ . '/../includes/comment-moderation.php';
 
 // The site's config shows PHP errors on a local machine; that would corrupt the JSON, so keep them in the log.
 ini_set('display_errors', '0');
@@ -23,13 +24,50 @@ if (session_status() === PHP_SESSION_ACTIVE) {
 
 // ── output ─────────────────────────────────────────────────────
 
+/**
+ * May a request that carries this Origin header use the write (POST) routes? The native app and curl send no Origin and are
+ * always fine. A browser page sends one: the website itself is fine, so is a local test machine (the Expo web preview runs on
+ * another port), but a page on any other site is not, or it could make its visitors post and report comments.
+ */
+function api_origin_allowed(?string $origin): bool
+{
+    global $is_local;
+    if ($origin === null || $origin === '' || !empty($is_local)) {
+        return true;
+    }
+    $host = strtolower((string) parse_url($origin, PHP_URL_HOST)); // the literal "null" origin (sandboxed frame, file://) has no host
+    if ($host === '') {
+        return false;
+    }
+    $site = strtolower((string) parse_url(OROMA_PUBLIC_URL, PHP_URL_HOST));
+    $requested = strtolower((string) preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+    return $host === $site || $host === 'www.' . $site || ($requested !== '' && $host === $requested);
+}
+
+/** Refuses a POST made by a browser page on another website (see api_origin_allowed). Called for every POST route. */
+function api_guard_write_origin(): void
+{
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+    if (!api_origin_allowed(is_string($origin) ? $origin : null)) {
+        json_error('Requests from another website are not allowed.', 403);
+    }
+}
+
 function api_headers(): void
 {
+    global $is_local;
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache');
     header('X-Content-Type-Options: nosniff');
-    // The native app does not need CORS; the Expo web preview in a desktop browser does.
-    header('Access-Control-Allow-Origin: *');
+    // The native app needs no CORS. The public GET data is open to any page; a write (POST) and its preflight are answered
+    // only for the website's own pages (a local test machine allows all, for the Expo web preview).
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if (!empty($is_local) || ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+        header('Access-Control-Allow-Origin: *');
+    } elseif (is_string($origin) && $origin !== '' && api_origin_allowed($origin)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Vary: Origin');
+    }
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Accept');
 }
@@ -85,30 +123,40 @@ function query_int(string $key, int $default, int $min, int $max): int
     return max($min, min($max, (int) ($_GET[$key] ?? $default)));
 }
 
+/**
+ * A text field of a JSON or form body, trimmed; missing or null gives ''. Anything that is not text or a number (an array or object
+ * sent by a hand-made client) is refused with a 422, instead of being cast to the word "Array" and passing validation.
+ */
+function body_text(array $in, string $key): string
+{
+    $value = $in[$key] ?? null;
+    if ($value === null) {
+        return '';
+    }
+    if (is_string($value) || is_int($value) || is_float($value)) {
+        return trim((string) $value);
+    }
+    json_error('Please check what you entered.', 422, [$key => ['This field must be text.']]);
+}
+
+/** The visitor's address as the limits and hashes see it (IPv6 as its /64, REMOTE_ADDR only): see ugc_client_ip(). */
 function client_ip(): string
 {
-    return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    return ugc_client_ip();
 }
 
 /**
  * Allow at most $max hits per $windowSeconds for this visitor and $bucket (e.g. "comment").
- * Counters live in small files in the system temp folder; if that is not writable the limit is skipped.
+ * The counting is shared with the website's comment form (ugc_rate_hit in includes/comment-moderation.php); if the temp folder
+ * is not writable the limit is skipped.
  */
 function rate_limit(string $bucket, int $max, int $windowSeconds): void
 {
-    $file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'oroma_rl_' . md5($bucket . '|' . client_ip()) . '.json';
-    $now  = time();
-    $hits = [];
-    if (is_file($file)) {
-        $decoded = json_decode((string) @file_get_contents($file), true);
-        $hits = is_array($decoded) ? $decoded : [];
-    }
-    $hits = array_values(array_filter($hits, static fn($t) => is_int($t) && $t > $now - $windowSeconds));
-    if (count($hits) >= $max) {
+    $wait = ugc_rate_hit($bucket, $max, $windowSeconds);
+    if ($wait > 0) {
+        header('Retry-After: ' . $wait);
         json_error('Too many attempts. Please wait a while and try again.', 429);
     }
-    $hits[] = $now;
-    @file_put_contents($file, json_encode($hits), LOCK_EX);
 }
 
 // ── absolute URLs ──────────────────────────────────────────────

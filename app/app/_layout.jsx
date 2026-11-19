@@ -16,6 +16,7 @@ import { setAudioModeAsync } from 'expo-audio';
 import StateView from '../components/StateView';
 import { COLORS } from '../constants/theme';
 import { lockPortrait } from '../lib/orientation';
+import { usePushTapHandler } from '../lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -48,6 +49,10 @@ export default function RootLayout() {
     // On an iPhone the silent switch would otherwise mute the video's sound.
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, []);
+
+  // Opens the right screen when a notification is tapped (it never asks for notification permission: that happens in My profile).
+  // It waits for the screens to be on show, because nothing can be opened before that.
+  usePushTapHandler(fontsLoaded || !!fontError);
 
   // If the fonts fail to load the app still opens (with the system font) rather than staying on the splash screen.
   if (!fontsLoaded && !fontError) return null;

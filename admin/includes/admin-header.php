@@ -32,7 +32,7 @@ function admin_nav_class(string $key, string $active): string
         <img src="<?= h(BASE_PATH) ?>/img/logo.png" alt="<?= h(SITE_NAME) ?>" />
         <span>Oroma Admin</span>
     </div>
-    <?php $pendingCommentCount = (int) db()->query("SELECT COUNT(*) AS c FROM comments WHERE status = 'pending'")->fetch()['c']; ?>
+    <?php require_once __DIR__ . '/../../includes/comment-moderation.php'; $pendingCommentCount = comment_attention_count(); // held + reported-but-still-public ?>
     <nav class="admin-nav">
         <a href="<?= h(BASE_PATH) ?>/admin/dashboard.php" class="<?= admin_nav_class('dashboard', $activeAdminNav) ?>"><i class="fas fa-gauge"></i> Dashboard</a>
         <a href="<?= h(BASE_PATH) ?>/admin/articles.php"   class="<?= admin_nav_class('articles',   $activeAdminNav) ?>"><i class="fas fa-newspaper"></i> Articles</a>

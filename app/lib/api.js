@@ -43,6 +43,30 @@ const api = axios.create({
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 });
 
+// api.get / post / patch / delete are the axios ones, so extra headers go in the request config:
+//   api.get('/profile', { headers: profileHeaders(token) })      api.patch('/profile', body, { headers })      api.delete('/profile', { headers })
+
+/** The header that proves a request comes from the phone that owns the profile (the token the server gave when it was created). */
+export const profileHeaders = (token) => (token ? { 'X-Profile-Token': String(token) } : {});
+
+/**
+ * Sends a multipart form (a picked photo) with POST. The instance default says JSON, which would turn the FormData into JSON, so the
+ * type is set to multipart here; the phone (or the browser) then adds the boundary itself. Resolves with the axios response like
+ * api.post, and rejects with badResponse() when the server answers 200 with something that is not JSON (an error page, a captive portal).
+ *   const form = new FormData(); form.append('photo', { uri, name: 'photo.jpg', type: 'image/jpeg' });
+ *   const { data } = await api.upload('/profile/photo', form, { headers: profileHeaders(token) });
+ */
+api.upload = async (path, formData, { headers, timeout = 60000, onUploadProgress, signal } = {}) => {
+  const res = await api.post(path, formData, {
+    headers: { ...headers, 'Content-Type': 'multipart/form-data' },
+    timeout, // a photo on a slow mobile connection needs longer than the usual 15 seconds
+    onUploadProgress,
+    signal,
+  });
+  if (!res?.data || typeof res.data !== 'object') throw badResponse();
+  return res;
+};
+
 /** Health check: GET /api/ping (not under /v1). Resolves with { status, version, ms }. */
 export async function ping() {
   const started = Date.now();

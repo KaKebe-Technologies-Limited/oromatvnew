@@ -14,6 +14,9 @@ $stats = db()->query(
 $streamCount = db()->query("SELECT COUNT(*) AS c FROM streams WHERE is_active = 1")->fetch()['c'];
 $userCount = db()->query('SELECT COUNT(*) AS c FROM users')->fetch()['c'];
 $pendingCommentCount = db()->query("SELECT COUNT(*) AS c FROM comments WHERE status = 'pending'")->fetch()['c'];
+require_once __DIR__ . '/../includes/comment-moderation.php';
+$heldCommentCount = $pendingCommentCount;      // held by the filter, a ban or automatic hiding
+$reportedCount = reported_comment_count();    // comments with open reports (0 if the moderation tables are missing)
 
 $recent = db()->query(
     "SELECT a.*, u.name AS author_name FROM articles a
@@ -72,10 +75,17 @@ require __DIR__ . '/includes/admin-header.php';
     <div class="stat-card">
         <div class="icon" style="background:rgba(201,168,76,0.15);color:#8a6d1f;"><i class="fas fa-comments"></i></div>
         <div>
-            <div class="value"><?= (int) $pendingCommentCount ?></div>
+            <div class="value"><?= (int) $heldCommentCount ?></div>
             <div class="label">Pending Comments</div>
         </div>
     </div>
+    <a class="stat-card" href="<?= h(BASE_PATH) ?>/admin/comments.php?status=reported" style="text-decoration:none;color:inherit;">
+        <div class="icon" style="background:rgba(192,57,43,0.12);color:#c0392b;"><i class="fas fa-flag"></i></div>
+        <div>
+            <div class="value" style="<?= $reportedCount > 0 ? 'color:#c0392b;' : '' ?>"><?= (int) $reportedCount ?></div>
+            <div class="label">Reported Comments <span style="font-size:11px;opacity:.7;">(review within 24 h)</span></div>
+        </div>
+    </a>
 </div>
 
 <div class="card">

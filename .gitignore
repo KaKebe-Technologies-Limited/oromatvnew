@@ -3,3 +3,14 @@
 # keeps the folder itself present in a fresh checkout.
 /uploads/*
 !/uploads/.gitkeep
+
+# Database exports hold password hashes, emails and other personal data: never commit or deploy them.
+# (Files already tracked stay tracked; live-schedule.sql is the schema reference and is kept.)
+/database/*.sql
+!/database/live-schedule.sql
+# comment-moderation.sql is the schema fallback the admin Comments page tells the owner to run: it must be tracked and deployed.
+!/database/comment-moderation.sql
+/backups/*.sql
+
+# Server-only secrets and overrides (for example define('COMMENT_HASH_PEPPER', '...');): never commit.
+/config.local.php

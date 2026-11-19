@@ -6,24 +6,45 @@
 // 1. ENVIRONMENT DETECTION
 // ================================================
 
-// A phone testing the mobile app reaches this PC by its home-network address (e.g. 192.168.0.103), not "localhost".
-// Treat that as local too — but only when the request really comes from inside the private network, so a
-// forged Host header from the internet can never switch a live site into local mode.
-$__hostOnly   = preg_replace('/:\d+$/', '', $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? ''));
-$__isPrivate  = static fn(string $ip): bool => filter_var($ip, FILTER_VALIDATE_IP) !== false
-    && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
-$__lanRequest = $__isPrivate($__hostOnly) && $__isPrivate($_SERVER['REMOTE_ADDR'] ?? '');
+// This is "local" only when BOTH hold: every host name the request carries (the Host header AND the server's own SERVER_NAME) is
+// exactly a local one (localhost, 127.0.0.1, [::1], *.localhost, *.test, or a private-network IPv4 such as 192.168.0.103, which is
+// how a phone testing the mobile app reaches this PC), and, when PHP knows the visitor's address (not on the command line), that
+// address is on this machine or the private network. A Host header that merely contains the word "localhost" is not enough, and a
+// forged Host header from the internet can never switch a live site into local mode (which turns on display_errors, the local
+// database login and the X-Test-IP test header).
+$__hostName = static function (string $host): string {
+    $host = strtolower(trim($host));
+    if (str_starts_with($host, '[')) { // "[::1]" or "[::1]:80"
+        $end = strpos($host, ']');
+        return $end === false ? $host : substr($host, 0, $end + 1);
+    }
+    return (string) preg_replace('/:\d+$/', '', $host);
+};
+$__isPrivate = static function (string $ip): bool {
+    if (str_starts_with(strtolower($ip), '::ffff:')) { // an IPv4 address written inside IPv6
+        $ip = substr($ip, 7);
+    }
+    return filter_var($ip, FILTER_VALIDATE_IP) !== false
+        && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
+};
+$__isLocalHost = static function (string $host) use ($__isPrivate): bool {
+    return $host !== '' && (
+        in_array($host, ['localhost', '127.0.0.1', '[::1]'], true)
+        || str_ends_with($host, '.localhost')
+        || str_ends_with($host, '.test')
+        || (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false && $__isPrivate($host))
+    );
+};
+$__remoteAddr = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
 
-// Check if we're running on localhost
-$is_local = (
-    $_SERVER['SERVER_NAME'] === 'localhost' ||
-    $_SERVER['SERVER_NAME'] === '127.0.0.1' ||
-    strpos($_SERVER['SERVER_NAME'], 'localhost') !== false ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
-    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false ||
-    $__lanRequest
-);
-unset($__hostOnly, $__isPrivate, $__lanRequest);
+$__names = array_values(array_filter([
+    $__hostName((string) ($_SERVER['HTTP_HOST'] ?? '')),
+    $__hostName((string) ($_SERVER['SERVER_NAME'] ?? '')),
+], static fn(string $n): bool => $n !== ''));
+$__localNames = $__names !== [] && count(array_filter($__names, $__isLocalHost)) === count($__names);
+
+$is_local = $__localNames && ($__remoteAddr === '' || $__isPrivate($__remoteAddr));
+unset($__hostName, $__isPrivate, $__isLocalHost, $__remoteAddr, $__names, $__localNames);
 
 // Or set manually for debugging (override detection)
 // $is_local = true;  // Uncomment to force local mode

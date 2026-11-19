@@ -195,7 +195,11 @@ function route_article(string $slug): void
     json_out(['data' => $data]);
 }
 
-/** POST { name, email?, comment, website? (honeypot) } — comments go live straight away, exactly like the website. */
+/**
+ * POST { name, email?, comment, viewer_id?, accepted_terms?, website? (honeypot) }
+ * A comment goes live at once unless the filter or a ban holds it for review (HTTP 202 then; see includes/comment-moderation.php).
+ * viewer_id (the app's anonymous id) is stored only as a one-way hash, so an abusive device can be held for review.
+ */
 function route_comment_create(string $slug): void
 {
     $article = api_find_article($slug);
@@ -204,14 +208,24 @@ function route_comment_create(string $slug): void
     }
     $in = request_body();
 
+    // Every text field is checked first: an array or object where text belongs is a 422, never the word "Array".
+    $honeypot = body_text($in, 'website');
+    $name     = body_text($in, 'name');
+    $email    = body_text($in, 'email');
+    $comment  = body_text($in, 'comment');
+    $viewerId = ugc_clean_viewer_id(body_text($in, 'viewer_id'));
+
     // Honeypot: real people never fill this hidden field. Pretend it worked so bots learn nothing.
-    if (trim((string) ($in['website'] ?? '')) !== '') {
+    if ($honeypot !== '') {
         json_out(['message' => 'Thanks! Your comment is now live.'], 201);
     }
 
-    $name    = trim((string) ($in['name'] ?? ''));
-    $email   = trim((string) ($in['email'] ?? ''));
-    $comment = trim((string) ($in['comment'] ?? ''));
+    // Old-app compatibility, on purpose: newer apps send accepted_terms (they show the Terms checkbox) and "false" is refused, but
+    // the app already on Google Play has no checkbox and does not send the field at all, so a missing field is allowed.
+    // Once most installs are updated, require accepted_terms === true here (the website form already requires its checkbox).
+    if (array_key_exists('accepted_terms', $in) && !filter_var($in['accepted_terms'], FILTER_VALIDATE_BOOLEAN)) {
+        json_error('Please agree to the Terms of Use to post a comment.', 422, ['accepted_terms' => ['Please agree to the Terms of Use to post a comment.']]);
+    }
 
     $errors = [];
     if (mb_strlen($name) < 2 || mb_strlen($name) > 100) {
@@ -229,24 +243,63 @@ function route_comment_create(string $slug): void
 
     rate_limit('comment', 6, 600);
 
-    // Refuse an identical comment on the same story in the last 10 minutes (double taps, copy-paste spam).
-    $dupe = db()->prepare(
-        'SELECT id FROM comments WHERE article_id = ? AND comment = ? AND created_at > ? LIMIT 1'
-    );
-    $dupe->execute([$article['id'], $comment, date('Y-m-d H:i:s', time() - 600)]);
-    if ($dupe->fetch()) {
+    ensure_comment_schema();
+    $device = ugc_device_hash($viewerId);
+
+    // Refuse the same device posting an identical comment on the same story within 10 minutes (double taps, copy-paste spam).
+    // Scoped to the device, so nobody is told that someone else already posted those words.
+    if (comment_is_duplicate((int) $article['id'], $comment, $device)) {
         json_error('You already posted that comment.', 422, ['comment' => ['You already posted that comment.']]);
     }
 
     $now = date('Y-m-d H:i:s');
-    db()->prepare(
-        "INSERT INTO comments (article_id, name, email, comment, status, created_at) VALUES (?, ?, ?, ?, 'approved', ?)"
-    )->execute([$article['id'], $name, $email ?: null, $comment, $now]);
+    [$status, $hold] = comment_moderate($name, $email ?: null, $comment, $device);
+    $id = comment_insert((int) $article['id'], $name, $email ?: null, $comment, $status, $hold, $device, $now);
 
+    if ($status !== 'approved') {
+        // Held for a moderator (the same words whether the filter or a ban held it, so a banned person is not told).
+        // 202 keeps older app versions working: they show the message and just do not add the comment to the list.
+        json_out(['message' => COMMENT_HELD_MESSAGE, 'held' => true, 'data' => null], 202);
+    }
     json_out([
         'message' => 'Thanks! Your comment is now live.',
-        'data'    => serialize_comment(['id' => db()->lastInsertId(), 'name' => $name, 'comment' => $comment, 'created_at' => $now]),
+        'data'    => serialize_comment(['id' => $id, 'name' => $name, 'comment' => $comment, 'created_at' => $now]),
     ], 201);
+}
+
+/**
+ * POST { reason: spam|abusive|misleading|other, viewer_id?, platform? } — report a published comment.
+ * One report per device per comment; when several different networks have reported it, it is hidden until a moderator reviews it.
+ * Nothing about the reporter is returned or shown to anyone; the admin queue is admin/comments.php?status=reported.
+ * Answers: 201 reported · 200 already reported by this device · 404 {"message","code":"comment_gone","data":null} when the comment
+ * does not exist or is not public (the ONLY 404 that carries that code) · 422 bad input · 429 slow down · 503 moderation tables missing.
+ */
+function route_comment_report(int $id): void
+{
+    rate_limit('report', 30, 3600);
+    ensure_comment_schema();
+    if (!comment_schema_ready()) {
+        json_error('Reporting is temporarily unavailable. Please email ' . SITE_EMAIL . '.', 503);
+    }
+    $in = request_body();
+    $reason   = body_text($in, 'reason');
+    $platform = body_text($in, 'platform');
+    $viewerId = ugc_clean_viewer_id(body_text($in, 'viewer_id'));
+    if (!in_array($reason, COMMENT_REPORT_REASONS, true)) {
+        json_error('Please choose a reason.', 422, ['reason' => ['Please choose a reason.']]);
+    }
+    $result = comment_report_add($id, $reason, $viewerId, $platform);
+
+    if ($result['state'] === 'missing') {
+        // The one 404 with this code: the comment does not exist or is not public any more. The app and the website treat only
+        // this exact answer as "already gone"; any other 404 (an old server without this route, the router's own 404) is a failure.
+        json_out(['message' => 'That comment is no longer available.', 'code' => 'comment_gone', 'data' => null], 404);
+    }
+    $payload = ['comment_id' => $id, 'reported' => true, 'hidden' => $result['hidden']];
+    if ($result['state'] === 'duplicate') {
+        json_out(['message' => 'You have already reported this comment. We aim to review reports within 24 hours.', 'data' => $payload]);
+    }
+    json_out(['message' => 'Thank you. We aim to review reports within 24 hours.', 'data' => $payload], 201);
 }
 
 // ── previous shows ─────────────────────────────────────────────
@@ -302,14 +355,15 @@ function route_contact(): void
 {
     $in = request_body();
 
-    if (trim((string) ($in['website'] ?? '')) !== '') { // honeypot
+    $honeypot = body_text($in, 'website');
+    $name     = body_text($in, 'name');
+    $email    = body_text($in, 'email');
+    $subject  = body_text($in, 'subject');
+    $message  = body_text($in, 'message');
+
+    if ($honeypot !== '') { // honeypot
         json_out(['message' => 'Thank you! Your message has been sent.']);
     }
-
-    $name    = trim((string) ($in['name'] ?? ''));
-    $email   = trim((string) ($in['email'] ?? ''));
-    $subject = trim((string) ($in['subject'] ?? ''));
-    $message = trim((string) ($in['message'] ?? ''));
 
     $errors = [];
     if ($name === '') {
@@ -363,8 +417,8 @@ function route_contact(): void
 function route_live_ping(): void
 {
     $in = request_body();
-    $viewerId = (string) ($in['viewer_id'] ?? '');
-    if (!preg_match('/^[A-Za-z0-9_-]{8,64}$/', $viewerId)) {
+    $viewerId = ugc_clean_viewer_id($in['viewer_id'] ?? null);
+    if ($viewerId === null) {
         json_error('A valid viewer_id is required.', 422, ['viewer_id' => ['A valid viewer_id is required.']]);
     }
     rate_limit('ping', 90, 60); // a device pings twice a minute; this only stops abuse

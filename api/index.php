@@ -9,6 +9,7 @@
  *   GET  /api/v1/articles            ?page &per_page &category &q &tag
  *   GET  /api/v1/articles/{slug}
  *   POST /api/v1/articles/{slug}/comments
+ *   POST /api/v1/comments/{id}/report
  *   GET  /api/v1/shows               ?page &per_page
  *   GET  /api/v1/shows/{id}
  *   POST /api/v1/contact
@@ -42,6 +43,7 @@ $routes = [
     ['GET',  '#^v1/articles$#',                      static fn() => route_articles()],
     ['GET',  '#^v1/articles/([A-Za-z0-9-]+)$#',      static fn($m) => route_article($m[1])],
     ['POST', '#^v1/articles/([A-Za-z0-9-]+)/comments$#', static fn($m) => route_comment_create($m[1])],
+    ['POST', '#^v1/comments/(\d+)/report$#',        static fn($m) => route_comment_report((int) $m[1])],
     ['POST', '#^v1/live/ping$#',                  static fn() => route_live_ping()],
     ['GET',  '#^v1/radio$#',                      static fn() => route_radio()],
     ['GET',  '#^v1/schedule$#',                   static fn() => route_schedule()],
@@ -56,6 +58,9 @@ foreach ($routes as [$verb, $pattern, $handler]) {
     if (preg_match($pattern, $route, $m)) {
         $pathMatched = true;
         if ($verb === $method) {
+            if ($method === 'POST') {
+                api_guard_write_origin(); // a page on another website may not post comments, reports or messages through its visitors
+            }
             $handler($m);
             exit;
         }

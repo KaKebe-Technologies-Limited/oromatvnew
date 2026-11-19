@@ -1040,6 +1040,18 @@ a   { color:inherit; text-decoration:none; }
 .comment-form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
 @media(max-width:560px){ .comment-form-row { grid-template-columns:1fr; } }
 .comment-form textarea { margin-bottom:14px; resize:vertical; min-height:110px; }
+/* Report a comment, and the Terms checkbox under the form (App Store 1.2 / Google Play UGC) */
+.comment-actions { display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; margin-top:6px; font-size:12.5px; }
+.comment-report-btn { background:none; border:none; padding:4px 0; cursor:pointer; color:var(--gray); font:600 12.5px var(--font-primary); }
+.comment-report-btn:hover { color:var(--maroon); }
+.comment-report-menu { display:inline-flex; gap:8px; flex-wrap:wrap; }
+.comment-report-menu[hidden], .comment-report-done[hidden], .comment-report-btn[hidden] { display:none; }
+.comment-report-menu button { background:#fff; border:1px solid var(--border); border-radius:20px; padding:5px 12px; cursor:pointer; color:var(--black); font:600 12px var(--font-primary); }
+.comment-report-menu button:hover { border-color:var(--maroon); color:var(--maroon); }
+.comment-report-done { color:var(--gray); font-style:italic; }
+.comment-terms { display:flex; align-items:flex-start; gap:10px; font-size:13px; line-height:1.55; color:var(--text); margin-bottom:14px; }
+.comment-terms input { width:18px; height:18px; margin-top:2px; flex-shrink:0; accent-color:var(--maroon); }
+.comment-terms a { color:var(--maroon); text-decoration:underline; }
 .form-control { width:100%; padding:11px 15px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--white); color:var(--text); font-family:var(--font-primary); font-size:14px; outline:none; transition:border-color .2s,box-shadow .2s; }
 .form-control:focus { border-color:var(--maroon); box-shadow:0 0 0 3px rgba(128,0,0,.1); }
 .form-hint { font-size:12px; color:var(--gray); margin-top:8px; }
