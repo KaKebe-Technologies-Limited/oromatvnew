@@ -192,7 +192,7 @@ require __DIR__ . '/includes/header.php';
                     <li>
                         <span class="contact-info-icon"><i class="fas fa-location-dot"></i></span>
                         <div>
-                            <strong>Address</strong>
+                            <strong>Postal address</strong>
                             <span>Oyam Road, Lira City, Uganda</span>
                         </div>
                     </li>
@@ -204,6 +204,7 @@ require __DIR__ . '/includes/header.php';
                         </div>
                     </li>
                 </ul>
+                <p class="form-hint" style="margin-top:16px;">To report a comment, use the <strong>Report</strong> button under it or email us. To ask us to see or delete your information, email us too. We aim to review reports within 24 hours. See our <a href="<?= h(BASE_PATH) ?>/privacy.php">Privacy Policy</a> and <a href="<?= h(BASE_PATH) ?>/terms.php">Terms of Use</a>.</p>
             </div>
 
             <!-- social links -->

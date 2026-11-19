@@ -61,8 +61,8 @@
                 <nav>
                     <a href="<?= h(BASE_PATH) ?>/contact.php">About Oroma TV</a>
                     <a href="<?= h(BASE_PATH) ?>/contact.php">Contact Us</a>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Use</a>
+                    <a href="<?= h(BASE_PATH) ?>/privacy.php">Privacy Policy</a>
+                    <a href="<?= h(BASE_PATH) ?>/terms.php">Terms of Use</a>
                     <a href="<?= h(BASE_PATH) ?>/contact.php">Advertise</a>
                 </nav>
             </div>
