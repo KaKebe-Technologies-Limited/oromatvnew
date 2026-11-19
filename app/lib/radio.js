@@ -29,13 +29,14 @@ let configured = false;
 let refreshTimer = null;
 let watchdog = null;
 let userStopped = true;
+let run = 0; // counts starts and stops, so a start that is still connecting can tell it has been cancelled
 
 async function configure() {
   if (configured) return;
   configured = true;
   // Play with the silent switch on, and keep playing when the app is in the background or the phone is locked.
   await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true, interruptionMode: 'doNotMix' }).catch(() => {});
-  player = createAudioPlayer(null, { updateInterval: 1000, keepAudioSessionActive: true });
+  player = createAudioPlayer(null, { updateInterval: 1000, keepAudioSessionActive: false });
   player.addListener('playbackStatusUpdate', onStatus);
 }
 
@@ -92,6 +93,7 @@ function startRefreshing() {
 export async function playRadio() {
   if (snapshot.phase === 'loading') return;
   userStopped = false;
+  const mine = ++run;
   set({ phase: 'loading', error: null });
   clearTimeout(watchdog);
   watchdog = setTimeout(() => {
@@ -103,6 +105,7 @@ export async function playRadio() {
   try {
     await configure();
     const info = await loadRadio();
+    if (mine !== run || userStopped) return; // Stop was pressed while connecting
     if (!info.enabled || !info.stream_url) throw new Error('quiet');
     // A live stream must join "now", so always load it fresh rather than resuming old buffered sound.
     player.replace({ uri: info.stream_url });
@@ -118,6 +121,7 @@ export async function playRadio() {
 
 export function stopRadio() {
   userStopped = true;
+  run += 1;
   clearTimeout(watchdog);
   clearInterval(refreshTimer);
   try {

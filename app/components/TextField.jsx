@@ -13,6 +13,7 @@ export default function TextField({ label, error, multiline = false, style, ...r
       ) : null}
       <TextInput
         placeholderTextColor={COLORS.gray500}
+        accessibilityLabel={label}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
         maxFontSizeMultiplier={1.15}

@@ -1,7 +1,7 @@
 // Small data-fetching hook for GET endpoints. Returns { data, loading, refreshing, error, reload, retry }
 // so every screen can show loading, error and empty states the same way.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import api, { errorMessage } from './api';
+import api, { badResponse, errorMessage } from './api';
 
 export function useFetch(path, { params, enabled = true } = {}) {
   const [state, setState] = useState({ data: null, loading: enabled, refreshing: false, error: null });
@@ -16,6 +16,7 @@ export function useFetch(path, { params, enabled = true } = {}) {
       if (mode !== 'quiet') setState((s) => ({ ...s, loading: mode === 'load', refreshing: mode === 'refresh', error: null }));
       try {
         const { data } = await api.get(path, { params: JSON.parse(paramsKey) });
+        if (!data || typeof data !== 'object') throw badResponse();
         if (id === latest.current) setState({ data, loading: false, refreshing: false, error: null });
       } catch (e) {
         if (id !== latest.current) return;

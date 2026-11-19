@@ -38,6 +38,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appName": "Oroma TV",
+        "sku": "oromatv-ios",
+        "language": "en-GB",
+        "companyName": "Kakebe Technologies Limited"
+      }
+    }
   }
 }

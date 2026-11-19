@@ -14,7 +14,7 @@ Same stack and conventions as the FaithFellows app: Expo Router, Axios, `useFetc
 | **News** | Search + category filter, endless list of stories |
 | **Live** (middle button) | Whatever is on air, decided in **Admin → Streams & Live**: a scheduled programme or movie premiere (it takes over by itself at its start time — and **everyone is at the same second**, like TV), or — when nothing is live — the **off-air playlist** on a loop. Shows how many people are watching, a **Share** button, a small **Listen to Q FM** button, a "Next live" countdown and the programme guide ("Later on"); radio and extra video channels sit below. YouTube plays in our own player with **Back 10s · Stop · Forward 10s · Fullscreen** (fullscreen turns the phone sideways) and a **LIVE** chip / **Jump to live** button. Keeps the screen awake while you watch |
 | **Shows** | The library made to browse: a featured show on top, an **on air / next premiere** banner, a **Premieres** rail, a **Movie night** rail, filter chips (All / Shows / Movies) and the grid; tap to play inside the app |
-| **More** | Contact, About, social profiles, website, server-connection test |
+| **More** | Contact, About, social profiles, website, legal pages, hidden commenters, server-connection test (dev server only) |
 
 Pushed screens: **Story** (article, tags, share, comments, related stories), **Show** (YouTube player, share), **Premiere** (countdown to a programme or movie, Add to calendar, Share — opens the Live tab by itself when it starts), **Contact**, **About**.
 
@@ -32,7 +32,7 @@ npx expo start            # scan the QR code with Expo Go
 ```
 
 - The app finds the API by itself: `http://<this computer's address>/oromatvnew/api`. Your phone and computer must be on the **same Wi-Fi**.
-- Check the connection from the app: **More → Server connection**. Or open `http://<computer-ip>/oromatvnew/api/ping` in the phone's browser.
+- Check the connection from the app: **More → Server connection** (shown only when run from `npx expo start`; no installed build shows it, the EAS `local-wifi` APK included). Or open `http://<computer-ip>/oromatvnew/api/ping` in the phone's browser.
 - If the phone cannot connect, allow **Apache (port 80)** through Windows Firewall for private networks.
 - Desktop preview (no phone): `npx expo start --web`. It shows the same screens in a browser; the players are plain iframes there.
 

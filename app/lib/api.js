@@ -4,7 +4,16 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 
 const ENV = Constants.expoConfig?.extra?.apiUrl || {};
-const appEnv = process.env.EXPO_PUBLIC_APP_ENV || 'development';
+// A release build is 'production' unless told otherwise; only a developer run (Expo Go / dev server) is 'development'.
+const appEnv = process.env.EXPO_PUBLIC_APP_ENV || (__DEV__ ? 'development' : 'production');
+
+/**
+ * The one switch for developer-only help (the connection test in More, the "cannot reach <address>" error text).
+ * __DEV__ is false in every build that is installed on a phone, the EAS "local-wifi" APK included (its APP_ENV is
+ * "development" but it is still a release bundle), so only a run from the dev server can ever turn this on; setting
+ * EXPO_PUBLIC_APP_ENV=production there switches it off to see what a store build shows.
+ */
+export const DEV_TOOLS = __DEV__ && appEnv !== 'production';
 
 /** The real website. Share links point here, and the live player / YouTube expect to be shown on it. */
 export const PUBLIC_SITE_URL = 'https://oromatv.com';
@@ -25,7 +34,7 @@ function devServerApi() {
 // EXPO_PUBLIC_API_URL wins (set it to a real address, or leave it as "auto" / empty while developing to use the address of the
 // computer running the dev server); otherwise the per-environment URL from app.json.
 const configured = (process.env.EXPO_PUBLIC_API_URL || '').trim();
-export const API_ROOT = ((configured && configured !== 'auto' ? configured : devServerApi()) || ENV[appEnv] || ENV.development || '').replace(/\/+$/, '');
+export const API_ROOT = ((configured && configured !== 'auto' ? configured : devServerApi()) || ENV[appEnv] || (__DEV__ ? ENV.development : ENV.production) || 'https://oromatv.com/api').replace(/\/+$/, '');
 export const SITE_URL = API_ROOT.replace(/\/api$/, '');
 
 const api = axios.create({
@@ -41,12 +50,16 @@ export async function ping() {
   return { ...data, ms: Date.now() - started };
 }
 
+/** The server answered 200 but not with the JSON we expect (a captive-portal page, a hosting error page…). */
+export const badResponse = () => Object.assign(new Error('Unexpected server answer'), { code: 'BAD_RESPONSE' });
+
 /** A human-readable message for any request error (validation, throttling, network…). */
 export function errorMessage(error, fallback = 'Something went wrong. Please try again.') {
+  if (error?.code === 'BAD_RESPONSE') return 'We could not read the answer from Oroma TV. Please try again in a moment.';
   const res = error?.response;
   if (!res) {
     if (error?.code === 'ECONNABORTED') return 'The server took too long to answer. Please try again.';
-    if (error?.message === 'Network Error') return `Cannot reach the server at ${API_ROOT || 'the API'}. Check your connection and the address in app/.env.`;
+    if (error?.message === 'Network Error') return DEV_TOOLS ? `Cannot reach the server at ${API_ROOT || 'the API'}. Check your connection and the address in app/.env.` : 'You appear to be offline, or Oroma TV cannot be reached right now. Please check your connection and try again.';
     return error?.message || fallback;
   }
   if (res.status === 422) {
@@ -56,6 +69,12 @@ export function errorMessage(error, fallback = 'Something went wrong. Please try
   if (res.status === 429) return 'Too many attempts. Please wait a while and try again.';
   if (res.status >= 500) return 'The server had a problem. Please try again shortly.';
   return res.data?.message || fallback;
+}
+
+/** The machine-readable `code` of a JSON error body ({ message, code, data }), or null (an old server, a hosting page, no reply). */
+export function errorCode(error) {
+  const code = error?.response?.data?.code;
+  return typeof code === 'string' ? code : null;
 }
 
 /** Field-level validation errors from a 422: { email: 'Please enter a valid email.' }. */

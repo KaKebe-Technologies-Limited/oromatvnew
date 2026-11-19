@@ -1,7 +1,7 @@
 // Contact screen: send Oroma TV a message, a news tip or an advertising enquiry, plus the office details.
 // The message goes to POST /api/v1/contact, which emails info@oromatv.com — the same as the website's contact form.
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppText from '../components/AppText';
 import Button from '../components/Button';
@@ -9,8 +9,8 @@ import Chip from '../components/Chip';
 import ScreenHeader from '../components/ScreenHeader';
 import TextField from '../components/TextField';
 import { COLORS, RADIUS, SHADOW, SPACING } from '../constants/theme';
-import api, { errorMessage, fieldErrors } from '../lib/api';
-import { CONTACT, openExternal } from '../lib/links';
+import api, { badResponse, errorMessage, fieldErrors } from '../lib/api';
+import { CONTACT, openExternal, openLink } from '../lib/links';
 
 const SUBJECTS = ['General Inquiry', 'News Tip', 'Advertising', 'Technical Support', 'Other'];
 const EMPTY = { name: '', email: '', subject: 'General Inquiry', message: '' };
@@ -43,6 +43,7 @@ export default function ContactScreen() {
     setErrors({});
     try {
       const { data } = await api.post('/contact', form);
+      if (!data || typeof data !== 'object') throw badResponse(); // a captive-portal or hosting page is not a sent message
       setForm(EMPTY);
       setStatus({ sending: false, sent: true, message: data.message });
     } catch (e) {
@@ -55,7 +56,7 @@ export default function ContactScreen() {
   return (
     <View style={styles.screen}>
       <ScreenHeader title="Contact us" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {status.sent ? (
             <View style={styles.success}>
@@ -107,6 +108,7 @@ export default function ContactScreen() {
             </AppText>
             <InfoRow icon="mail" label="Email" value={CONTACT.email} onPress={() => openExternal(`mailto:${CONTACT.email}`)} />
             <InfoRow icon="call" label="Phone" value={CONTACT.phone} onPress={() => openExternal(CONTACT.phoneLink)} />
+            <InfoRow icon="globe" label="Website contact page" value={CONTACT.web} onPress={() => openLink(CONTACT.web)} />
             <InfoRow icon="location" label="Address" value={CONTACT.address} />
             <InfoRow icon="time" label="Office hours" value={CONTACT.hours} />
           </View>

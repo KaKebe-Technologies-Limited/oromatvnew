@@ -2,7 +2,7 @@
 // loads page 1, appends the next page on loadMore(), and supports pull-to-refresh. Same states as useFetch
 // (loading / refreshing / error) plus `loadingMore`.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import api, { errorMessage } from './api';
+import api, { badResponse, errorMessage } from './api';
 
 export function usePaged(path, params = {}, { enabled = true } = {}) {
   const [items, setItems] = useState([]);
@@ -18,6 +18,7 @@ export function usePaged(path, params = {}, { enabled = true } = {}) {
       setState((s) => ({ ...s, loading: mode === 'load', refreshing: mode === 'refresh', loadingMore: mode === 'more', error: null }));
       try {
         const { data } = await api.get(path, { params: { ...JSON.parse(paramsKey), page } });
+        if (!data || !Array.isArray(data.data)) throw badResponse();
         if (id !== latest.current) return;
         setItems((current) => (page === 1 ? data.data : [...current, ...data.data]));
         setMeta(data.meta ?? { current_page: page, last_page: page, total: data.data.length });

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
+import { StatusBar } from 'expo-status-bar';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -200,6 +201,7 @@ export default function LiveScreen() {
 
   return (
     <View style={styles.screen}>
+      {focused ? <StatusBar style="light" /> : null}
       <View style={[styles.top, { paddingTop: insets.top + 8 }]}>
         <AppText variant="title" style={{ color: COLORS.white }}>
           Live
@@ -219,12 +221,18 @@ export default function LiveScreen() {
               {!selected && stage ? (
                 <AppText variant="overline" style={{ color: COLORS.goldLight }}>
                   {kindLabel(stage)}
-                  {stage.mode === 'premiere' && stage.kind === 'program' ? ' · everyone watches together' : ''}
                 </AppText>
               ) : null}
               <AppText variant="title" style={styles.infoTitle} numberOfLines={3}>
                 {selected ? selected.name : stage ? stage.title : live?.title}
               </AppText>
+              {!selected && stage?.mode === 'premiere' && stage.kind === 'program' ? (
+                // The red LIVE badge is for the broadcast; a recording shown at its time says what it is, in readable text.
+                <View style={styles.together}>
+                  <Ionicons name="people" size={16} color={COLORS.goldLight} />
+                  <AppText style={styles.togetherText}>Recorded programme, shown at its scheduled time. Everyone watches together.</AppText>
+                </View>
+              ) : null}
               <AppText style={styles.infoSub}>
                 {selected
                   ? playingRadio
@@ -315,6 +323,8 @@ const styles = StyleSheet.create({
   info: { padding: SPACING.md, gap: 6 },
   infoTitle: { color: COLORS.white, fontSize: 20, lineHeight: 26 },
   infoSub: { color: 'rgba(255,255,255,0.72)' },
+  together: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingVertical: 8, paddingHorizontal: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(255,255,255,0.1)' },
+  togetherText: { flex: 1, color: 'rgba(255,255,255,0.92)', fontSize: 13.5, lineHeight: 19 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: SPACING.sm + 2 },
   next: { flexDirection: 'row', gap: 14, alignItems: 'center', marginHorizontal: SPACING.md, marginTop: SPACING.md, padding: SPACING.md, borderRadius: RADIUS.lg, backgroundColor: 'rgba(255,255,255,0.08)', borderLeftWidth: 4, borderLeftColor: COLORS.gold },
   nextIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },

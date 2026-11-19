@@ -8,8 +8,17 @@ export const CONTACT = {
   tips: 'tips@oromatv.com',
   phone: '+256 772 033 333',
   phoneLink: 'tel:+256772033333',
+  web: 'https://oromatv.com/contact.php',
   address: 'Oyam Road, Lira City, Uganda',
   hours: 'Monday – Friday, 9:00 AM – 5:00 PM (EAT)',
+};
+
+/** The pages the stores and YouTube require the app to link to. */
+export const LEGAL = {
+  privacy: 'https://oromatv.com/privacy.php',
+  terms: 'https://oromatv.com/terms.php',
+  youtubeTerms: 'https://www.youtube.com/t/terms',
+  googlePrivacy: 'https://policies.google.com/privacy',
 };
 
 export const SOCIALS = [

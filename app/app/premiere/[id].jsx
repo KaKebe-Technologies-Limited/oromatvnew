@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
@@ -43,11 +44,12 @@ export default function PremiereScreen() {
 
   // Ask the server again now and then (and often once the time is close), so "it is on" is never missed.
   const left = p ? Date.parse(p.starts_at) - (now + skew) : Infinity;
-  const close = left < 90000;
+  const close = left > -60000 && left < 90000; // fast checks only around the start time
   useEffect(() => {
+    if (p?.state === 'ended') return undefined;
     const timer = setInterval(refreshQuietly, close ? 3000 : 20000);
     return () => clearInterval(timer);
-  }, [refreshQuietly, close]);
+  }, [refreshQuietly, close, p?.state]);
 
   // On air: go to the Live tab, where it plays.
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function PremiereScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar style="light" />
       <ScreenHeader title={p ? p.kind_label : 'Premiere'} dark />
       <StateView loading={loading} error={error} onRetry={retry}>
         {p ? (

@@ -1,5 +1,5 @@
-// More tab: contact and about pages, the official social profiles, the website, and a connection check
-// (handy when the app cannot reach the server).
+// More tab: contact and about pages, the official social profiles, the website, the legal pages the stores and YouTube require
+// (privacy policy, terms, YouTube terms), hidden commenters, and — only when run from the dev server, never in an installed build (see DEV_TOOLS in lib/api.js) — a connection check.
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Constants from 'expo-constants';
@@ -8,8 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppText from '../../components/AppText';
 import { COLORS, RADIUS, SHADOW, SPACING } from '../../constants/theme';
-import { API_ROOT, PUBLIC_SITE_URL, errorMessage, ping } from '../../lib/api';
-import { SOCIALS, openLink } from '../../lib/links';
+import { API_ROOT, DEV_TOOLS, PUBLIC_SITE_URL, errorMessage, ping } from '../../lib/api';
+import { LEGAL, SOCIALS, openLink } from '../../lib/links';
 
 function Row({ icon, title, subtitle, onPress, last }) {
   return (
@@ -58,6 +58,16 @@ export default function MoreScreen() {
         </View>
 
         <AppText variant="heading" style={styles.sectionTitle}>
+          Legal and safety
+        </AppText>
+        <View style={styles.card}>
+          <Row icon="shield-checkmark" title="Privacy Policy" subtitle="How Oroma TV handles your information" onPress={() => openLink(LEGAL.privacy)} />
+          <Row icon="document-text" title="Terms of Use" subtitle="Community rules and how we handle reports" onPress={() => openLink(LEGAL.terms)} />
+          <Row icon="eye-off" title="Hidden commenters" subtitle="Show again anyone you hid from the comments" onPress={() => router.push('/hidden-commenters')} />
+          <Row icon="logo-youtube" title="YouTube Terms of Service" subtitle="Videos in this app play through YouTube" onPress={() => openLink(LEGAL.youtubeTerms)} last />
+        </View>
+
+        <AppText variant="heading" style={styles.sectionTitle}>
           Follow Oroma TV
         </AppText>
         <View style={styles.socials}>
@@ -73,20 +83,22 @@ export default function MoreScreen() {
           App
         </AppText>
         <View style={styles.card}>
-          <Pressable accessibilityRole="button" onPress={testConnection} style={({ pressed }) => [styles.row, styles.rowDivider, pressed && { backgroundColor: COLORS.gray100 }]}>
-            <View style={styles.rowIcon}>
-              <Ionicons name={connection.state === 'ok' ? 'checkmark-circle' : connection.state === 'failed' ? 'alert-circle' : 'wifi'} size={20} color={connection.state === 'ok' ? COLORS.success : connection.state === 'failed' ? COLORS.danger : COLORS.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <AppText variant="label">Server connection</AppText>
-              <AppText variant="caption" numberOfLines={3} style={{ marginTop: 1, color: connection.state === 'failed' ? COLORS.danger : COLORS.gray700 }}>
-                {connection.text}
-              </AppText>
-              <AppText variant="caption" numberOfLines={1} style={{ color: COLORS.gray500, marginTop: 1 }}>
-                {API_ROOT}
-              </AppText>
-            </View>
-          </Pressable>
+          {DEV_TOOLS ? (
+            <Pressable accessibilityRole="button" onPress={testConnection} style={({ pressed }) => [styles.row, styles.rowDivider, pressed && { backgroundColor: COLORS.gray100 }]}>
+              <View style={styles.rowIcon}>
+                <Ionicons name={connection.state === 'ok' ? 'checkmark-circle' : connection.state === 'failed' ? 'alert-circle' : 'wifi'} size={20} color={connection.state === 'ok' ? COLORS.success : connection.state === 'failed' ? COLORS.danger : COLORS.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="label">Server connection</AppText>
+                <AppText variant="caption" numberOfLines={3} style={{ marginTop: 1, color: connection.state === 'failed' ? COLORS.danger : COLORS.gray700 }}>
+                  {connection.text}
+                </AppText>
+                <AppText variant="caption" numberOfLines={1} style={{ color: COLORS.gray500, marginTop: 1 }}>
+                  {API_ROOT}
+                </AppText>
+              </View>
+            </Pressable>
+          ) : null}
           <View style={styles.row}>
             <View style={styles.rowIcon}>
               <Ionicons name="phone-portrait" size={20} color={COLORS.primary} />

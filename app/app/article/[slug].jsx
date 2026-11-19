@@ -1,6 +1,6 @@
 // Story screen: cover photo, headline, byline, the article body, tags, sharing, comments and more stories to read.
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +42,7 @@ export default function ArticleScreen() {
 
       <StateView loading={loading} error={error} onRetry={retry}>
         {article ? (
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
               <Image source={{ uri: article.image }} contentFit="cover" transition={250} style={styles.cover} />
               {article.image_caption ? (

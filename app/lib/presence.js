@@ -18,7 +18,7 @@ function randomId() {
 }
 
 /** This phone's anonymous viewer id (made once, then remembered; a new one each launch if storage is not available). */
-async function viewerId() {
+export async function getViewerId() {
   if (cachedId) return cachedId;
   try {
     const saved = await SecureStore.getItemAsync(KEY);
@@ -28,7 +28,7 @@ async function viewerId() {
   }
   cachedId = randomId();
   try {
-    await SecureStore.setItemAsync(KEY, cachedId);
+    await SecureStore.setItemAsync(KEY, cachedId, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY }); // not copied to a new phone from a backup
   } catch {
     // Not remembered; harmless.
   }
@@ -45,7 +45,7 @@ export function usePresence(active) {
     const beat = async () => {
       if (AppState.currentState !== 'active') return;
       try {
-        const { data } = await api.post('/live/ping', { viewer_id: await viewerId(), platform: 'app' });
+        const { data } = await api.post('/live/ping', { viewer_id: await getViewerId(), platform: 'app' });
         if (!cancelled && typeof data?.data?.watching === 'number') setWatching(data.data.watching);
       } catch {
         // A missed check-in is harmless: the next one counts again.

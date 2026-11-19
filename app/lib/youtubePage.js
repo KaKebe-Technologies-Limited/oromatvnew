@@ -1,6 +1,6 @@
 // Builds the small web page that plays a YouTube video with YouTube's own controls switched off, using YouTube's official
 // IFrame Player API (controls=0). The app draws its own Back / Stop / Forward buttons and tells this page what to do
-// through window.__cmd('back' | 'toggle' | 'play' | 'stop' | 'forward' | 'live' | 'mute' | 'unmute'); the page reports what the player is doing back to
+// through window.__cmd('back' | 'toggle' | 'play' | 'stop' | 'forward' | 'live' | 'mute' | 'unmute' | 'suspend'); the page reports what the player is doing back to
 // the app as JSON messages: { type: 'ready' } · { type: 'state', state } · { type: 'error', code } · { type: 'tick', t }
 // (the position in seconds, once a second while playing — so a video can carry on from the same moment after going fullscreen)
 // · and, for a synchronized programme, { type: 'sync', lag } (how many seconds the viewer is behind everyone else).
@@ -47,7 +47,7 @@ export function youtubePage(videoId, { autoplay = true, start = 0, crop = 0, syn
     ${start > 0 ? `vars.start = ${Math.floor(start)};` : ''}
     if (syncStart && !behind) vars.start = Math.floor(expected()); // join the programme where everyone else is
     player = new YT.Player('p', {
-      videoId: ${JSON.stringify(String(videoId))},
+      videoId: ${JSON.stringify(String(videoId)).replace(/</g, '\\u003c')},
       playerVars: vars,
       events: {
         onReady: function () {
@@ -80,6 +80,7 @@ export function youtubePage(videoId, { autoplay = true, start = 0, crop = 0, syn
     var now = player.getCurrentTime() || 0;
     if (command === 'play') player.playVideo();
     else if (command === 'mute') player.mute(); // the radio is playing: keep the picture running, silently
+    else if (command === 'suspend') player.pauseVideo(); // the app went to the background (not a viewer's choice, so not 'behind')
     else if (command === 'unmute') player.unMute();
     else if (command === 'stop') { if (syncStart) behind = true; player.pauseVideo(); }
     else if (command === 'toggle') { if (player.getPlayerState() === 1) { if (syncStart) behind = true; player.pauseVideo(); } else player.playVideo(); }

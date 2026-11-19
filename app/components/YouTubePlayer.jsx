@@ -10,7 +10,7 @@
 // is at the same second, like TV. A small LIVE chip shows while the viewer is on the shared moment; if they press Back or Stop
 // they fall behind on purpose and the chip becomes "Jump to live".
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, AppState, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { COLORS, RADIUS, SPACING } from '../constants/theme';
@@ -29,6 +29,10 @@ const BAR_HIDE_MS = 3500; // fullscreen buttons fade away after this long
 // player cannot be told not to). The app covers the picture with its own screen while that happens.
 const SHIELD_MS = 4000;
 const BEHIND_SECONDS = 8; // further behind the shared moment than this -> offer "Jump to live"
+// The system can throw the player's page away (iOS content process, Android renderer). It is rebuilt, but if that happens more than
+// MAX_REBUILDS times within REBUILD_WINDOW_MS the video is not tried again by itself: the error screen is shown instead.
+const MAX_REBUILDS = 3;
+const REBUILD_WINDOW_MS = 60000;
 
 function RoundButton({ icon, label, onPress, disabled, big, small }) {
   return (
@@ -50,6 +54,9 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
   const timer = useRef(null);
   const position = useRef(0); // the last known second, kept fresh by the page's ticks
   const resume = useRef({ autoplay, start: 0 }); // what the next (re)loaded player should do
+  const wasPlaying = useRef(false); // it was playing when the app went to the background or the page was lost: carry on when it can
+  const pageReady = useRef(false); // the page now on screen has a player that takes commands
+  const rebuilds = useRef([]); // when the page was last rebuilt after being lost
   const [status, setStatus] = useState('loading'); // loading | playing | buffering | paused | ended | error
   const [attempt, setAttempt] = useState(0);
   const [full, setFull] = useState(false);
@@ -58,6 +65,8 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
   const [lag, setLag] = useState(0); // synchronized programmes: seconds behind the shared moment
   const shieldTimer = useRef(null);
   const statusRef = useRef('loading');
+  const syncStartRef = useRef(syncStart);
+  syncStartRef.current = syncStart;
 
   /** Cover the picture for a few seconds (optionally showing which way the viewer skipped). */
   const startShield = useCallback((skip) => {
@@ -73,6 +82,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
     shownVideo.current = videoId;
     position.current = 0;
     resume.current = { autoplay, start: 0 };
+    rebuilds.current = [];
   }
 
   const html = useMemo(() => youtubePage(videoId, { ...resume.current, syncStart, muted }), [videoId, attempt, full]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -80,6 +90,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
   // A new video, a retry, or the switch to / from fullscreen loads a fresh player: start from "loading" and never leave
   // the viewer on an endless spinner.
   useEffect(() => {
+    pageReady.current = false;
     setStatus('loading');
     setShield(null);
     setLag(0);
@@ -96,11 +107,35 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
   // If the screen is left while in fullscreen (a navigation, a reload), put the phone upright again.
   useEffect(() => () => void lockPortrait(), []);
 
+  // YouTube's policies say a video must not keep playing when the app is in the background (only the radio may). Stop it there, and
+  // bring it back when the app returns: a synchronized programme jumps to the shared moment, anything else just plays on. Only the real
+  // background counts: on an iPhone "inactive" (Control Center, a call banner) pauses nothing, so there is nothing to bring back.
+  // It also covers a page that was thrown away while the app was away: it plays again once it is rebuilt and the app is back.
+  const resumePlayback = useCallback(() => {
+    if (!wasPlaying.current || !pageReady.current || AppState.currentState !== 'active') return;
+    wasPlaying.current = false;
+    if (syncStartRef.current > 0) setLag(0); // 'live' puts the viewer back on the shared moment
+    surface.current?.run(syncStartRef.current > 0 ? 'live' : 'play');
+  }, []);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'background') {
+        if (statusRef.current === 'playing' || statusRef.current === 'buffering') wasPlaying.current = true;
+        surface.current?.run('suspend');
+      } else if (next === 'active') {
+        resumePlayback();
+      }
+    });
+    return () => sub.remove();
+  }, [resumePlayback]);
+
   const onMessage = useCallback(
     (message) => {
       if (message.type === 'ready') {
+        pageReady.current = true;
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setStatus((s) => (s === 'loading' ? 'paused' : s)), AUTOPLAY_GRACE_MS);
+        resumePlayback(); // a page rebuilt after it was lost picks up where the viewer was
       } else if (message.type === 'tick') {
         position.current = message.t || 0;
       } else if (message.type === 'sync') {
@@ -121,7 +156,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
         setStatus('error');
       }
     },
-    [onEnded, startShield],
+    [onEnded, startShield, resumePlayback],
   );
 
   statusRef.current = status;
@@ -132,6 +167,21 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
   };
   const isPlaying = status === 'playing' || status === 'buffering';
   const behind = syncStart > 0 && lag > BEHIND_SECONDS;
+  // The page of a video can be discarded (iOS after a spell in the background, Android's renderer): build it again from where it was.
+  // The new page never starts by itself (it may be rebuilt while the app is away): if the viewer was watching, it carries on through
+  // resumePlayback() once the page is ready and the app is in front.
+  const onTerminated = () => {
+    const now = Date.now();
+    rebuilds.current = [...rebuilds.current.filter((at) => now - at < REBUILD_WINDOW_MS), now];
+    if (isPlaying || (status === 'loading' && autoplay)) wasPlaying.current = true; // it was playing, or was about to start by itself
+    resume.current = { autoplay: false, start: position.current, behind };
+    if (rebuilds.current.length > MAX_REBUILDS) setStatus('error'); // it keeps happening: stop here, "Try again" starts over
+    else setAttempt((n) => n + 1);
+  };
+  const tryAgain = () => {
+    rebuilds.current = [];
+    setAttempt((n) => n + 1);
+  };
   const jumpToLive = () => {
     run('live');
     setStatus('buffering');
@@ -168,7 +218,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
 
   const stage = (inFullscreen) => (
     <View style={inFullscreen ? styles.fullStage : styles.stage}>
-      <PlayerSurface key={`${attempt}-${inFullscreen ? 'full' : 'inline'}`} ref={surface} html={html} baseUrl={referrer} onMessage={onMessage} onFailed={() => setStatus('error')} />
+      <PlayerSurface key={`${attempt}-${inFullscreen ? 'full' : 'inline'}`} ref={surface} html={html} baseUrl={referrer} onMessage={onMessage} onFailed={() => setStatus('error')} onTerminated={onTerminated} />
 
       {status === 'loading' ? (
         <View style={styles.cover}>
@@ -195,7 +245,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
         <View style={[styles.cover, { padding: SPACING.md, gap: SPACING.sm + 4 }]}>
           <AppText style={styles.errorText}>This video could not be played here.</AppText>
           <View style={styles.errorActions}>
-            <Button title="Try again" small variant="light" onPress={() => setAttempt((n) => n + 1)} />
+            <Button title="Try again" small variant="light" onPress={tryAgain} />
             {watchUrl ? <Button title="Open in YouTube" small variant="ghost" onPress={() => openExternal(watchUrl)} /> : null}
           </View>
         </View>
@@ -223,7 +273,7 @@ export default function YouTubePlayer({ videoId, watchUrl, autoplay = true, refe
         ) : (
           <View style={styles.chip} pointerEvents="none">
             <View style={styles.chipDot} />
-            <AppText style={styles.chipText}>LIVE</AppText>
+            <AppText style={styles.chipText}>ON AIR</AppText>
           </View>
         )
       ) : null}

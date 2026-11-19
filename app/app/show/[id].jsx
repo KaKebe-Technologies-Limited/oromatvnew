@@ -1,6 +1,7 @@
 // Show screen: plays a previous episode (YouTube) right inside the app, with its guest, date, and more episodes below.
 import { FlatList, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import AppText from '../../components/AppText';
 import Button from '../../components/Button';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -20,6 +21,7 @@ export default function ShowScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar style="light" />
       <ScreenHeader title="Previous show" dark />
       <StateView loading={loading} error={error} onRetry={retry}>
         {show ? (

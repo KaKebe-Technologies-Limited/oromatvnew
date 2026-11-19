@@ -4,7 +4,7 @@ import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-const PlayerSurface = forwardRef(function PlayerSurface({ html, baseUrl, onMessage, onFailed, style }, ref) {
+const PlayerSurface = forwardRef(function PlayerSurface({ html, baseUrl, onMessage, onFailed, onTerminated, style }, ref) {
   const web = useRef(null);
 
   useImperativeHandle(ref, () => ({
@@ -23,7 +23,7 @@ const PlayerSurface = forwardRef(function PlayerSurface({ html, baseUrl, onMessa
       bounces={false}
       allowsInlineMediaPlayback
       mediaPlaybackRequiresUserAction={false}
-      mixedContentMode="always"
+      mixedContentMode="compatibility"
       setSupportMultipleWindows={false}
       onMessage={(e) => {
         try {
@@ -33,6 +33,8 @@ const PlayerSurface = forwardRef(function PlayerSurface({ html, baseUrl, onMessa
         }
       }}
       onError={onFailed}
+      onContentProcessDidTerminate={onTerminated}
+      onRenderProcessGone={onTerminated}
     />
   );
 });
